@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Keuangan">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="apple-touch-icon" id="appIcon" href="">
+  <title>Catatan Keuangan</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #4f46e5;
+    }
+    iframe {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="appFrame" src=https://script.google.com/macros/s/AKfycbzUJt7RW-3ifOVorkv8oPYGLyE5ez-VyOxwK543VpM8DYG1MsqYtC6TYceIQDlTGYI9eA/exec allow="clipboard-write"></iframe>
+
+  <script>
+    // Generator otomatis ikon PNG 180x180 untuk layar utama iPhone & Android
+    (function() {
+      try {
+        var c = document.createElement('canvas');
+        c.width = 180; c.height = 180;
+        var ctx = c.getContext('2d');
+        var g = ctx.createLinearGradient(0, 0, 180, 180);
+        g.addColorStop(0, '#4f46e5');
+        g.addColorStop(1, '#7c3aed');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, 180, 180);
+        ctx.font = '96px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('💰', 90, 96);
+        document.getElementById('appIcon').href = c.toDataURL('image/png');
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>
