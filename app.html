@@ -486,6 +486,21 @@ nav button.fab{width:64px;height:64px;padding:0;border-radius:50%;background:lin
   margin-top:-36px;box-shadow:0 10px 24px rgba(79,70,229,.45);border:4px solid var(--bg)}
 nav button.fab svg{width:32px;height:32px;stroke-width:2.75}
 nav button.fab:active{transform:scale(.93)}
+/* menu tombol + (3 bulatan) */
+#fabBg{position:fixed;inset:0;z-index:9;background:rgba(10,12,25,.45);opacity:0;pointer-events:none;transition:opacity .2s}
+#fabBg.on{opacity:1;pointer-events:auto}
+#fabMenu{position:fixed;left:50%;bottom:calc(112px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:11;display:flex;gap:22px;pointer-events:none}
+#fabMenu.on{pointer-events:auto}
+.fab-opt{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;padding:0;color:#fff;font-weight:700;font-size:13px;
+  opacity:0;transform:translateY(24px) scale(.6);transition:.22s cubic-bezier(.2,.9,.3,1.2);-webkit-tap-highlight-color:transparent}
+#fabMenu.on .fab-opt{opacity:1;transform:none}
+#fabMenu.on .fab-opt:nth-child(2){transition-delay:.04s}
+#fabMenu.on .fab-opt:nth-child(3){transition-delay:.08s}
+.fab-circle{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:28px;background:var(--card);box-shadow:0 8px 20px rgba(0,0,0,.28);transition:transform .12s}
+.fab-opt:active .fab-circle{transform:scale(.92)}
+.fab-lbl{text-shadow:0 1px 4px rgba(0,0,0,.55)}
+nav button.fab svg{transition:transform .2s}
+nav button.fab.open svg{transform:rotate(45deg)}
 /* smart budget alert & filter lintas bulan */
 .alert-card{background:var(--card);border-radius:18px;padding:13px 15px;box-shadow:var(--shadow);margin-bottom:14px;
   border-left:4px solid #f59e0b;cursor:pointer;transition:.15s}
@@ -1008,7 +1023,18 @@ nav button.fab:active{transform:scale(.93)}
   <div><div style="font-size:34px">📡</div><p>Data belum bisa dimuat.</p>
   <button class="primary" onclick="retryLoad()">Coba lagi</button></div>
 </div>
-
+<div id="fabBg" onclick="closeFabMenu()"></div>
+<div id="fabMenu" role="menu" aria-label="Tambah transaksi">
+  <button type="button" class="fab-opt" role="menuitem" onclick="fabAction('scan')">
+    <span class="fab-circle">📷</span><span class="fab-lbl">Kamera</span>
+  </button>
+  <button type="button" class="fab-opt" role="menuitem" onclick="fabAction('manual')">
+    <span class="fab-circle">✍️</span><span class="fab-lbl">Manual</span>
+  </button>
+  <button type="button" class="fab-opt" role="menuitem" onclick="fabAction('voice')">
+    <span class="fab-circle">🎤</span><span class="fab-lbl">Suara</span>
+  </button>
+</div>
 <nav><div class="in">
   <button class="on" data-v="home" onclick="go('home')" aria-label="Ringkasan">
     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>
@@ -1016,7 +1042,7 @@ nav button.fab:active{transform:scale(.93)}
   <button data-v="wallet" onclick="go('wallet')" aria-label="Dompet">
     <svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="14" rx="3"/><path d="M2.5 10h19"/><circle cx="17" cy="15" r="1.2" fill="currentColor"/></svg>
   </button>
-  <button class="fab" data-v="add" onclick="go('add')" aria-label="Tambah transaksi">
+  <button class="fab" data-v="add" onclick="toggleFabMenu()" aria-label="Tambah transaksi">
     <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
   <button data-v="budget" onclick="go('budget')" aria-label="Budgeting">
@@ -2157,7 +2183,31 @@ function retryLoad(){
   $('loader').classList.remove('off');
   load();
 }
+function openFabMenu(){
+  $('fabBg').classList.add('on');
+  $('fabMenu').classList.add('on');
+  document.querySelector('nav button.fab').classList.add('open');
+}
+function closeFabMenu(){
+  $('fabBg').classList.remove('on');
+  $('fabMenu').classList.remove('on');
+  document.querySelector('nav button.fab').classList.remove('open');
+}
+function toggleFabMenu(){
+  if($('fabMenu').classList.contains('on')) closeFabMenu(); else openFabMenu();
+}
+function fabAction(kind){
+  closeFabMenu();
+  go('add');
+  if(kind === 'scan'){
+    var inp = $('scanInput');
+    if(inp) inp.click();
+  } else if(kind === 'voice'){
+    if(!voiceRecording) toggleVoiceRec();
+  }
+}
 function go(v){
+  closeFabMenu();
   document.querySelectorAll('.view').forEach(function(x){x.classList.remove('on');});
   $('v-'+v).classList.add('on');
   var navTarget = v === 'cats' ? 'home' : v;
