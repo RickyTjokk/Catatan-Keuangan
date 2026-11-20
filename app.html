@@ -1030,13 +1030,13 @@ nav button.fab.open svg{transform:rotate(45deg)}
 <div id="fabBg" onclick="tryCloseFabMenu()"></div>
 <div id="fabMenu" role="menu" aria-label="Tambah transaksi">
   <button type="button" class="fab-opt" id="fabOptScan" role="menuitem" onclick="fabAction('scan')">
-    <span class="fab-circle" id="fabIcoScan">📷</span><span class="fab-lbl" id="fabLblScan">Kamera</span>
+    <span class="fab-circle" id="fabIcoScan"></span><span class="fab-lbl" id="fabLblScan"></span>
   </button>
   <button type="button" class="fab-opt" role="menuitem" onclick="fabAction('manual')">
-    <span class="fab-circle">✍️</span><span class="fab-lbl">Manual</span>
+    <span class="fab-circle" id="fabIcoManual"></span><span class="fab-lbl" id="fabLblManual"></span>
   </button>
   <button type="button" class="fab-opt" id="fabOptVoice" role="menuitem" onclick="fabAction('voice')">
-    <span class="fab-circle" id="fabIcoVoice">🎤</span><span class="fab-lbl" id="fabLblVoice">Suara</span>
+    <span class="fab-circle" id="fabIcoVoice"></span><span class="fab-lbl" id="fabLblVoice"></span>
   </button>
   <input type="file" id="fabScanInput" accept="image/*" style="display:none" onchange="onReceiptPicked(this)">
 </div>
@@ -1492,6 +1492,13 @@ var I18N = {
     scanSub: 'Foto struk atau pilih screenshot QRIS/m-banking',
     scanDone: 'Struk terbaca! Periksa lalu tekan Simpan ✨',
     voiceBtn: 'Rekam Suara',
+    fabCam: 'Kamera',
+    fabManual: 'Manual',
+    fabVoice: 'Suara',
+    fabStop: 'Berhenti',
+    fabProc: 'Memproses…',
+    fabRead: 'Membaca…',
+    fabWait: 'Selesaikan dulu proses yang berjalan',
     voiceStop: '⏹ Selesai Rekam',
     voiceListening: 'Mendengarkan… ketuk lagi untuk selesai',
     voiceProcessing: 'Memproses suara…',
@@ -1559,6 +1566,13 @@ var I18N = {
     scanSub: 'Snap a receipt or pick a QRIS/m-banking screenshot',
     scanDone: 'Receipt scanned! Review & tap Save ✨',
     voiceBtn: 'Voice Input',
+    fabCam: 'Camera',
+    fabManual: 'Manual',
+    fabVoice: 'Voice',
+    fabStop: 'Stop',
+    fabProc: 'Processing…',
+    fabRead: 'Reading…',
+    fabWait: 'Please finish the current process first',
     voiceStop: '⏹ Stop Recording',
     voiceListening: 'Listening… tap again to stop',
     voiceProcessing: 'Processing voice…',
@@ -1838,6 +1852,7 @@ function applyLang(){
   $('lblHabitHdr').textContent = dict.habitHdr;
   if($('lblScanTitle')) $('lblScanTitle').textContent = dict.scanTitle;
   if($('lblVoiceBtn') && !voiceRecording) $('lblVoiceBtn').textContent = dict.voiceBtn;
+  if(typeof fabSyncState === 'function') fabSyncState();
   $('tOut').textContent = dict.fOut;
   $('tIn').textContent = dict.fIn;
   $('tTrf').textContent = dict.fTrf;
@@ -2205,7 +2220,7 @@ function closeFabMenu(){
   document.querySelector('nav button.fab').classList.remove('open');
 }
 function tryCloseFabMenu(){
-  if(fabIsLocked()){ toast('Selesaikan dulu proses yang berjalan'); return; }
+   if(fabIsLocked()){ toast(tr('fabWait')); return; }
   closeFabMenu();
 }
 function toggleFabMenu(){
@@ -2232,20 +2247,31 @@ function fabAction(kind){
   }
 }
 
-/* sinkronkan tampilan 3 bulatan dengan status rekam/scan, lalu pindah ke form saat selesai */
+var FAB_ICO = {
+  cam: '<svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+  edit: '<svg viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>',
+  mic: '<svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>',
+  stop: '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+  spin: '<svg class="spin" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.2-8.55"/></svg>'
+};
+
+/* sinkronkan tampilan 3 bulatan dengan status rekam/scan + bahasa, lalu pindah ke form saat selesai */
 function fabSyncState(){
+  if(typeof FAB_ICO === 'undefined' || !FAB_ICO) return;
   var v = document.getElementById('voiceBtn'), s = document.getElementById('scanCard');
-  if(!v || !s) return;
+  if(!v || !s || !document.getElementById('fabOptVoice')) return;
   var vRec = v.classList.contains('rec');
   var vBusy = v.classList.contains('busy');
   var sBusy = s.classList.contains('busy');
   $('fabOptVoice').classList.toggle('rec', vRec);
   $('fabOptVoice').classList.toggle('busy', vBusy);
-  $('fabIcoVoice').textContent = vRec ? '⏹' : (vBusy ? '⏳' : '🎤');
-  $('fabLblVoice').textContent = vRec ? 'Berhenti' : (vBusy ? 'Memproses…' : 'Suara');
+  $('fabIcoVoice').innerHTML = vRec ? FAB_ICO.stop : (vBusy ? FAB_ICO.spin : FAB_ICO.mic);
+  $('fabLblVoice').textContent = vRec ? tr('fabStop') : (vBusy ? tr('fabProc') : tr('fabVoice'));
   $('fabOptScan').classList.toggle('busy', sBusy);
-  $('fabIcoScan').textContent = sBusy ? '⏳' : '📷';
-  $('fabLblScan').textContent = sBusy ? 'Membaca…' : 'Kamera';
+  $('fabIcoScan').innerHTML = sBusy ? FAB_ICO.spin : FAB_ICO.cam;
+  $('fabLblScan').textContent = sBusy ? tr('fabRead') : tr('fabCam');
+  $('fabIcoManual').innerHTML = FAB_ICO.edit;
+  $('fabLblManual').textContent = tr('fabManual');
   var active = vRec || vBusy || sBusy;
   if(fabWasActive && !active && $('fabMenu').classList.contains('on')){
     closeFabMenu();
@@ -2260,6 +2286,7 @@ function fabSyncState(){
     var mo = new MutationObserver(fabSyncState);
     mo.observe(v, { attributes: true, attributeFilter: ['class'] });
     mo.observe(s, { attributes: true, attributeFilter: ['class'] });
+    fabSyncState();
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
