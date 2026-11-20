@@ -499,6 +499,10 @@ nav button.fab:active{transform:scale(.93)}
 .fab-circle{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:28px;background:var(--card);box-shadow:0 8px 20px rgba(0,0,0,.28);transition:transform .12s}
 .fab-opt:active .fab-circle{transform:scale(.92)}
 .fab-lbl{text-shadow:0 1px 4px rgba(0,0,0,.55)}
+.fab-opt.rec .fab-circle{background:#ef4444;animation:fabPulse 1.1s ease-in-out infinite}
+.fab-opt.busy{pointer-events:none}
+.fab-opt.busy .fab-circle{opacity:.75}
+@keyframes fabPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.55)}50%{box-shadow:0 0 0 14px rgba(239,68,68,0)}}
 nav button.fab svg{transition:transform .2s}
 nav button.fab.open svg{transform:rotate(45deg)}
 /* smart budget alert & filter lintas bulan */
@@ -1023,17 +1027,18 @@ nav button.fab.open svg{transform:rotate(45deg)}
   <div><div style="font-size:34px">📡</div><p>Data belum bisa dimuat.</p>
   <button class="primary" onclick="retryLoad()">Coba lagi</button></div>
 </div>
-<div id="fabBg" onclick="closeFabMenu()"></div>
+<div id="fabBg" onclick="tryCloseFabMenu()"></div>
 <div id="fabMenu" role="menu" aria-label="Tambah transaksi">
-  <button type="button" class="fab-opt" role="menuitem" onclick="fabAction('scan')">
-    <span class="fab-circle">📷</span><span class="fab-lbl">Kamera</span>
+  <button type="button" class="fab-opt" id="fabOptScan" role="menuitem" onclick="fabAction('scan')">
+    <span class="fab-circle" id="fabIcoScan">📷</span><span class="fab-lbl" id="fabLblScan">Kamera</span>
   </button>
   <button type="button" class="fab-opt" role="menuitem" onclick="fabAction('manual')">
     <span class="fab-circle">✍️</span><span class="fab-lbl">Manual</span>
   </button>
-  <button type="button" class="fab-opt" role="menuitem" onclick="fabAction('voice')">
-    <span class="fab-circle">🎤</span><span class="fab-lbl">Suara</span>
+  <button type="button" class="fab-opt" id="fabOptVoice" role="menuitem" onclick="fabAction('voice')">
+    <span class="fab-circle" id="fabIcoVoice">🎤</span><span class="fab-lbl" id="fabLblVoice">Suara</span>
   </button>
+  <input type="file" id="fabScanInput" accept="image/*" style="display:none" onchange="onReceiptPicked(this)">
 </div>
 <nav><div class="in">
   <button class="on" data-v="home" onclick="go('home')" aria-label="Ringkasan">
@@ -2183,6 +2188,12 @@ function retryLoad(){
   $('loader').classList.remove('off');
   load();
 }
+var fabWasActive = false;
+
+function fabIsLocked(){
+  var v = document.getElementById('voiceBtn'), s = document.getElementById('scanCard');
+  return !!(voiceRecording || (v && v.classList.contains('busy')) || (s && s.classList.contains('busy')));
+}
 function openFabMenu(){
   $('fabBg').classList.add('on');
   $('fabMenu').classList.add('on');
@@ -2193,21 +2204,68 @@ function closeFabMenu(){
   $('fabMenu').classList.remove('on');
   document.querySelector('nav button.fab').classList.remove('open');
 }
+function tryCloseFabMenu(){
+  if(fabIsLocked()){ toast('Selesaikan dulu proses yang berjalan'); return; }
+  closeFabMenu();
+}
 function toggleFabMenu(){
-  if($('fabMenu').classList.contains('on')) closeFabMenu(); else openFabMenu();
+  if($('fabMenu').classList.contains('on')) tryCloseFabMenu(); else openFabMenu();
 }
 function fabAction(kind){
-  closeFabMenu();
-  go('add');
+  if(kind === 'manual'){
+    if(fabIsLocked()) return;
+    closeFabMenu();
+    go('add');
+    return;
+  }
   if(kind === 'scan'){
-    var inp = $('scanInput');
+    if(fabIsLocked()) return;
+    var inp = $('fabScanInput');
     if(inp) inp.click();
-  } else if(kind === 'voice'){
-    if(!voiceRecording) toggleVoiceRec();
+    return;
+  }
+  if(kind === 'voice'){
+    var vb = $('voiceBtn'), sc = $('scanCard');
+    if(vb && vb.classList.contains('busy')) return;
+    if(sc && sc.classList.contains('busy')) return;
+    toggleVoiceRec();
   }
 }
+
+/* sinkronkan tampilan 3 bulatan dengan status rekam/scan, lalu pindah ke form saat selesai */
+function fabSyncState(){
+  var v = document.getElementById('voiceBtn'), s = document.getElementById('scanCard');
+  if(!v || !s) return;
+  var vRec = v.classList.contains('rec');
+  var vBusy = v.classList.contains('busy');
+  var sBusy = s.classList.contains('busy');
+  $('fabOptVoice').classList.toggle('rec', vRec);
+  $('fabOptVoice').classList.toggle('busy', vBusy);
+  $('fabIcoVoice').textContent = vRec ? '⏹' : (vBusy ? '⏳' : '🎤');
+  $('fabLblVoice').textContent = vRec ? 'Berhenti' : (vBusy ? 'Memproses…' : 'Suara');
+  $('fabOptScan').classList.toggle('busy', sBusy);
+  $('fabIcoScan').textContent = sBusy ? '⏳' : '📷';
+  $('fabLblScan').textContent = sBusy ? 'Membaca…' : 'Kamera';
+  var active = vRec || vBusy || sBusy;
+  if(fabWasActive && !active && $('fabMenu').classList.contains('on')){
+    closeFabMenu();
+    go('add');
+  }
+  fabWasActive = active;
+}
+(function(){
+  function start(){
+    var v = document.getElementById('voiceBtn'), s = document.getElementById('scanCard');
+    if(!v || !s || typeof MutationObserver === 'undefined') return;
+    var mo = new MutationObserver(fabSyncState);
+    mo.observe(v, { attributes: true, attributeFilter: ['class'] });
+    mo.observe(s, { attributes: true, attributeFilter: ['class'] });
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
 function go(v){
-  closeFabMenu();
+  if(!fabIsLocked()) closeFabMenu();
   document.querySelectorAll('.view').forEach(function(x){x.classList.remove('on');});
   $('v-'+v).classList.add('on');
   var navTarget = v === 'cats' ? 'home' : v;
