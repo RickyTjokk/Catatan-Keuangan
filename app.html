@@ -709,6 +709,60 @@ nav button.fab.open svg{transform:rotate(45deg)}
 #edit{padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
 :root{--muted:#667085}
 
+/* ===== LIQUID GLASS ===== */
+:root{
+  --glass:rgba(255,255,255,.55); --glass-strong:rgba(255,255,255,.80);
+  --glass-brd:rgba(255,255,255,.65);
+  --glass-hi:inset 0 1px 0 rgba(255,255,255,.85),inset 0 -1px 0 rgba(255,255,255,.25);
+  --glass-sh:0 8px 32px rgba(31,38,90,.16);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--glass:rgba(30,36,64,.50);--glass-strong:rgba(24,29,51,.80);
+    --glass-brd:rgba(255,255,255,.14);
+    --glass-hi:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(255,255,255,.04);
+    --glass-sh:0 8px 32px rgba(0,0,0,.45)}
+}
+:root[data-theme="dark"]{--glass:rgba(30,36,64,.50);--glass-strong:rgba(24,29,51,.80);
+  --glass-brd:rgba(255,255,255,.14);
+  --glass-hi:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(255,255,255,.04);
+  --glass-sh:0 8px 32px rgba(0,0,0,.45)}
+
+/* latar berwarna supaya blur terlihat */
+body{background:transparent}
+body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(420px 320px at 12% 8%,rgba(124,58,237,.28),transparent 70%),
+    radial-gradient(380px 300px at 92% 30%,rgba(2,132,199,.22),transparent 70%),
+    radial-gradient(460px 360px at 30% 95%,rgba(236,72,153,.20),transparent 70%)}
+
+/* header edge-to-edge */
+.top{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px;
+  background:var(--glass);border-bottom:1px solid var(--glass-brd);
+  -webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6)}
+
+/* nav melayang berbentuk pil */
+nav{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));max-width:456px;margin:0 auto;
+  padding:8px 14px;border:1px solid var(--glass-brd);border-radius:32px;background:var(--glass);
+  -webkit-backdrop-filter:blur(22px) saturate(1.8);backdrop-filter:blur(22px) saturate(1.8);
+  box-shadow:var(--glass-hi),var(--glass-sh)}
+nav button.on:not(.fab){background:rgba(79,70,229,.14)}
+nav button.fab{margin-top:0;width:56px;height:56px;border:0}
+
+/* bottom sheet */
+#edit,#pad,#catAddModal,#budAddModal,#walletAddModal,#walletOptModal,#confirmSheet,#profModal,#filterModal{
+  background:var(--glass-strong);border-top:1px solid var(--glass-brd);
+  -webkit-backdrop-filter:blur(28px) saturate(1.8);backdrop-filter:blur(28px) saturate(1.8);
+  box-shadow:var(--glass-hi),0 -10px 40px rgba(0,0,0,.2)}
+
+/* fallback */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .top,nav,#edit,#pad,#catAddModal,#budAddModal,#walletAddModal,#walletOptModal,#confirmSheet,#profModal,#filterModal{background:var(--card)}
+}
+@media (prefers-reduced-transparency:reduce){
+  .top,nav,#edit,#pad,#catAddModal,#budAddModal,#walletAddModal,#walletOptModal,#confirmSheet,#profModal,#filterModal{
+    background:var(--card);-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+
 </style>
 </head>
 <body>
