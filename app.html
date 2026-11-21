@@ -763,6 +763,25 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
     background:var(--card);-webkit-backdrop-filter:none;backdrop-filter:none}
 }
 
+/* bar Laporan & Kalender di Riwayat */
+.rbar{display:flex;align-items:center;background:var(--card);border-radius:18px;box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+.rbar-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-height:48px;padding:0 8px;color:var(--primary);font-weight:700;font-size:13px;background:none;border:0;font-family:inherit;cursor:pointer}
+.rbar-btn:active{background:var(--primary-soft)}
+.rbar-sep{width:1px;height:24px;background:var(--line)}
+.cal-box{padding:12px 6px}
+.cal-wd,.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-wd{margin-bottom:4px}
+.cal-wd span{text-align:center;font-size:11px;font-weight:700;color:var(--muted)}
+.cal-cell{min-height:58px;border-radius:12px;background:var(--bg);border:0;padding:5px 1px;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:inherit;color:var(--text);cursor:pointer}
+.cal-cell:active{opacity:.7}
+.cal-cell.empty{background:transparent;pointer-events:none}
+.cal-d{font-size:13px;font-weight:700;min-width:22px;height:22px;line-height:22px;text-align:center;border-radius:11px}
+.cal-d.today{background:var(--primary);color:#fff}
+.cal-in,.cal-out{font-size:9.5px;font-weight:700;line-height:1.15;white-space:nowrap}
+.cal-in{color:var(--green)}
+.cal-out{color:var(--red)}
+.dcard{scroll-margin-top:12px}
+  
 </style>
 </head>
 <body>
@@ -878,6 +897,24 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
     </div>
   </section>
 
+  <!-- LAPORAN PEMASUKAN & PENGELUARAN -->
+  <section class="view" id="v-lap">
+    <div class="subhead">
+      <button type="button" class="backbtn" onclick="go('list')">‹ Kembali</button>
+      <span id="lapMonth" style="font-size:13px;color:var(--muted);font-weight:600"></span>
+    </div>
+    <div class="stat2">
+      <div class="sbox"><small id="lapLblIn">Total Masuk</small><b id="lapIn" style="color:var(--green)">Rp 0</b></div>
+      <div class="sbox"><small id="lapLblOut">Total Keluar</small><b id="lapOut" style="color:var(--red)">Rp 0</b></div>
+    </div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <span id="lapLblNet" style="font-size:13px;color:var(--muted);font-weight:600">Selisih bulan ini</span>
+      <b id="lapNet" style="font-size:17px">Rp 0</b>
+    </div>
+    <div class="card"><h3 id="lapTitleIn">📥 Pemasukan per kategori</h3><div id="lapInList"></div></div>
+    <div class="card"><h3 id="lapTitleOut">📤 Pengeluaran per kategori</h3><div id="lapOutList"></div></div>
+  </section>
+  
   <!-- DOMPET -->
   <section class="view" id="v-wallet">
     <div class="hero">
@@ -1032,6 +1069,19 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
       </div>
       <small id="lFreeSub" style="text-align:right;line-height:1.35"></small>
     </div>
+    <div class="rbar">
+      <button type="button" class="rbar-btn" onclick="go('lap')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="16" y="9" width="4" height="11" rx="1"/></svg>
+        <span id="lapBtnLbl">Lihat Laporan</span>
+      </button>
+      <span class="rbar-sep"></span>
+      <button type="button" class="rbar-btn" onclick="toggleCalendar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>
+        <span id="calToggleLbl">Tampilkan Kalender</span>
+        <svg id="calChev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+    <div id="calBox" class="card cal-box" style="display:none"></div>
       <div class="fbar fbar-compact">
       <div class="fbar-row">
         <div class="fsearch" id="fSearchWrap">
@@ -2363,7 +2413,7 @@ function go(v){
   if(!fabIsLocked()) closeFabMenu();
   document.querySelectorAll('.view').forEach(function(x){x.classList.remove('on');});
   $('v-'+v).classList.add('on');
-  var navTarget = v === 'cats' ? 'home' : v;
+  var navTarget = v === 'cats' ? 'home' : (v === 'lap' ? 'list' : v);
   document.querySelectorAll('nav button').forEach(function(b){b.classList.toggle('on', b.dataset.v===navTarget);});
   if($('profBtn')) $('profBtn').style.display = (v === 'home') ? 'flex' : 'none';
   window.scrollTo(0,0);
@@ -2570,6 +2620,8 @@ function render(){
   renderCatDetail();
   renderRecent();
   renderDays();
+  renderCalendar();
+  renderLaporan();
   renderWallets();
   renderBudget();
   renderHabits();
@@ -4154,7 +4206,7 @@ function renderDays(){
         '<div class="amt '+cls+'">'+sign+mk(rp(t.amount))+'</div></div>';
     }).join('');
     var netTxt = net===0 ? 'Rp 0' : (net>0?'+':'-')+rp(Math.abs(net));
-    return '<div class="dcard"><div class="dhead">'+
+    return '<div class="dcard" id="day-'+d+'"><div class="dhead">'+
       '<div class="dnum">'+('0'+p[2]).slice(-2)+'</div>'+
       '<div class="dmid"><b>'+dayLabel(d)+'</b><small>'+BLN[p[1]-1]+' '+p[0]+'</small></div>'+
       '<div class="dtot" style="color:'+(net>0?'var(--green)':net<0?'var(--red)':'var(--muted)')+'">'+mk(netTxt)+'</div></div>'+rows+'</div>';
@@ -4189,6 +4241,111 @@ function renderReport(){
 }
 function num(n){ return n ? Math.round(n).toLocaleString('id-ID') : ''; }
 
+/* ===== Kalender Riwayat + Halaman Laporan ===== */
+var calOpen = false;
+function toggleCalendar(){ calOpen = !calOpen; renderCalendar(); }
+
+function calPick(ds){
+  var el = $('day-' + ds);
+  if(!el){ toast(APP_LANG === 'en' ? 'No transactions on this date' : 'Tidak ada transaksi di tanggal ini'); return; }
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderCalendar(){
+  var box = $('calBox');
+  if(!box || !S) return;
+  var en = APP_LANG === 'en';
+  $('lapBtnLbl').textContent = en ? 'See reports' : 'Lihat Laporan';
+  $('calToggleLbl').textContent = calOpen ? (en ? 'Hide calendar' : 'Sembunyikan Kalender') : (en ? 'Show calendar' : 'Tampilkan Kalender');
+  $('calChev').style.transform = calOpen ? 'rotate(180deg)' : '';
+  box.style.display = calOpen ? 'block' : 'none';
+  if(!calOpen) return;
+
+  var y = +S.ym.slice(0,4), m = +S.ym.slice(5,7);
+  var daysInMonth = new Date(y, m, 0).getDate();
+  var offset = (new Date(y, m - 1, 1).getDay() + 6) % 7; // minggu mulai Senin
+  var byDay = {};
+  visibleTxs().forEach(function(t){
+    if(t.type === 'Transfer') return;
+    var d = +t.date.slice(8,10);
+    if(!byDay[d]) byDay[d] = { inc: 0, out: 0 };
+    if(t.type === 'Pemasukan') byDay[d].inc += t.amount; else byDay[d].out += t.amount;
+  });
+  var amt = function(n){ return hide ? '••' : short(n); };
+
+  var wd = en ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] : ['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
+  var html = '<div class="cal-wd">' + wd.map(function(w){ return '<span>' + w + '</span>'; }).join('') + '</div><div class="cal-grid">';
+  for(var i = 0; i < offset; i++) html += '<div class="cal-cell empty"></div>';
+  for(var d = 1; d <= daysInMonth; d++){
+    var ds = S.ym + '-' + ('0' + d).slice(-2);
+    var v = byDay[d];
+    html += '<button type="button" class="cal-cell" onclick="calPick(\'' + ds + '\')">' +
+      '<span class="cal-d' + (ds === S.today ? ' today' : '') + '">' + d + '</span>' +
+      (v && v.inc > 0 ? '<span class="cal-in">+' + amt(v.inc) + '</span>' : '') +
+      (v && v.out > 0 ? '<span class="cal-out">-' + amt(v.out) + '</span>' : '') +
+      '</button>';
+  }
+  box.innerHTML = html + '</div>';
+}
+
+function groupByCat_(tp){
+  var map = {};
+  visibleTxs().forEach(function(t){
+    if(t.type !== tp) return;
+    var c = map[t.cat] || (map[t.cat] = { cat: t.cat, amount: 0, subMap: {} });
+    c.amount += t.amount;
+    var k = t.sub || 'Umum';
+    c.subMap[k] = (c.subMap[k] || 0) + t.amount;
+  });
+  return Object.keys(map).map(function(k){
+    var c = map[k];
+    return {
+      cat: c.cat, amount: c.amount,
+      subs: Object.keys(c.subMap).map(function(s){ return { sub: s, amount: c.subMap[s] }; })
+        .sort(function(a, b){ return b.amount - a.amount; })
+    };
+  }).sort(function(a, b){ return b.amount - a.amount; });
+}
+
+function lapRowsHtml(list, tot, tp){
+  if(!list.length){
+    return '<div class="empty" style="padding:18px 10px">' + (APP_LANG === 'en' ? 'No data this month' : 'Belum ada data bulan ini') + '</div>';
+  }
+  return list.map(function(c, idx){
+    var p = tot > 0 ? c.amount / tot * 100 : 0;
+    var color = PALETTE[idx % PALETTE.length];
+    var subs = c.subs.map(function(s){
+      return '<div class="subrow"><span>' + esc(trCat(s.sub)) + '</span><span>' + mk(rp(s.amount)) + '</span></div>';
+    }).join('');
+    return '<div class="catwrap" onclick="this.classList.toggle(\'open\')">' +
+      '<div class="cat"><div class="ico">' + iconOf(c.cat, tp) + '</div><div class="mid">' +
+      '<div class="l"><b><i class="cdot" style="background:' + color + '"></i>' + esc(trCat(c.cat)) + '<span class="caret">▾</span></b><span>' + mk(rp(c.amount)) + ' · ' + Math.round(p) + '%</span></div>' +
+      '<div class="bar"><i style="background:' + color + ';width:' + p + '%"></i></div></div></div>' +
+      '<div class="subs">' + subs + '</div></div>';
+  }).join('');
+}
+
+function renderLaporan(){
+  if(!S || !$('lapIn')) return;
+  var en = APP_LANG === 'en';
+  var inc = groupByCat_('Pemasukan'), out = groupByCat_('Pengeluaran');
+  var totIn = inc.reduce(function(a, c){ return a + c.amount; }, 0);
+  var totOut = out.reduce(function(a, c){ return a + c.amount; }, 0);
+  var net = totIn - totOut;
+  $('lapMonth').textContent = BLN[+S.ym.slice(5,7) - 1] + ' ' + S.ym.slice(0,4);
+  $('lapLblIn').textContent = en ? 'Total Income' : 'Total Masuk';
+  $('lapLblOut').textContent = en ? 'Total Expense' : 'Total Keluar';
+  $('lapLblNet').textContent = en ? 'Net this month' : 'Selisih bulan ini';
+  $('lapTitleIn').textContent = en ? '📥 Income by category' : '📥 Pemasukan per kategori';
+  $('lapTitleOut').textContent = en ? '📤 Expenses by category' : '📤 Pengeluaran per kategori';
+  $('lapIn').textContent = mk(rp(totIn));
+  $('lapOut').textContent = mk(rp(totOut));
+  $('lapNet').textContent = mk((net > 0 ? '+' : '') + rp(net));
+  $('lapNet').style.color = net > 0 ? 'var(--green)' : (net < 0 ? 'var(--red)' : 'var(--muted)');
+  $('lapInList').innerHTML = lapRowsHtml(inc, totIn, 'Pemasukan');
+  $('lapOutList').innerHTML = lapRowsHtml(out, totOut, 'Pengeluaran');
+}
+      
 /* Inisialisasi Tema, Bahasa, Ikon PNG iOS & Muat Data */
 applyTheme(APP_THEME);
 applyLang();
