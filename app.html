@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
-<meta name="theme-color" content="#4f46e5">
+<meta name="theme-color" content="#f3f4f9">
 <title>Catatan Keuangan</title>
 <style>
 :root{
@@ -4138,36 +4138,6 @@ function num(n){ return n ? Math.round(n).toLocaleString('id-ID') : ''; }
 /* Inisialisasi Tema, Bahasa, Ikon PNG iOS & Muat Data */
 applyTheme(APP_THEME);
 applyLang();
-
-(function(){
-  try {
-    var c = document.createElement('canvas');
-    c.width = 180; c.height = 180;
-    var ctx = c.getContext('2d');
-    var g = ctx.createLinearGradient(0, 0, 180, 180);
-    g.addColorStop(0, '#4f46e5');
-    g.addColorStop(1, '#7c3aed');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.moveTo(40, 0); ctx.lineTo(140, 0); ctx.quadraticCurveTo(180, 0, 180, 40);
-    ctx.lineTo(180, 140); ctx.quadraticCurveTo(180, 180, 140, 180);
-    ctx.lineTo(40, 180); ctx.quadraticCurveTo(0, 180, 0, 140);
-    ctx.lineTo(0, 40); ctx.quadraticCurveTo(0, 0, 40, 0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.font = '96px "Apple Color Emoji","Segoe UI Emoji",sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('💰', 90, 96);
-    var pngUrl = c.toDataURL('image/png');
-    if(pngUrl && pngUrl.indexOf('data:image/png') === 0){
-      var links = document.querySelectorAll('link[rel="apple-touch-icon"]');
-      for(var i=0; i<links.length; i++) links[i].href = pngUrl;
-    }
-  } catch(e) {}
-})();
-
-
 
 load();
 </script>
