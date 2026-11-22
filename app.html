@@ -107,6 +107,11 @@ button{border:0;background:none;cursor:pointer}
 .add-bud-btn:active{transform:scale(.96);opacity:.85}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:10px}
 .legend s{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;text-decoration:none}
+.rpt-wrap{position:relative;padding-top:46px}
+.rpt-tip{position:absolute;top:0;left:70%;transform:translateX(-50%);white-space:nowrap;pointer-events:none;
+  background:var(--card);border:1px solid rgba(128,128,128,.25);box-shadow:var(--shadow);
+  border-radius:10px;padding:6px 10px;font-size:12px;line-height:1.4;z-index:2}
+.rpt-tip small{color:var(--muted);font-size:11px}
 /* kategori & portofolio */
 .cat{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .cat:last-child{margin-bottom:0}
@@ -4225,19 +4230,43 @@ function renderReport(){
       ? ('Spent <b>'+mk(rp(r.curTotal))+'</b>, <b style="color:'+col+'">'+mk(rp(Math.abs(diff)))+(up?' higher':' lower')+pct+'</b> than '+r.avgMonths+'-month average ('+mk(rp(r.avgTotal))+').')
       : ('Pengeluaran <b>'+mk(rp(r.curTotal))+'</b>, <b style="color:'+col+'">'+mk(rp(Math.abs(diff)))+(up?' lebih besar':' lebih hemat')+pct+'</b> dari rata-rata '+r.avgMonths+' bulan terakhir ('+mk(rp(r.avgTotal))+').');
   }
-  var max = Math.max.apply(null, r.cur.concat(r.avg).concat([1]));
+    var max = Math.max.apply(null, r.cur.concat(r.avg).concat([1]));
   var W=320, H=130, P=10, step=(W-P*2)/Math.max(1,n-1);
-  var pts = function(a){ return a.map(function(v,i){ return (P+i*step).toFixed(1)+','+(H-P-(v/max)*(H-P*2)).toFixed(1); }).join(' '); };
-  var lastX = (P+(n-1)*step).toFixed(1), lastY = (H-P-(r.cur[n-1]/max)*(H-P*2)).toFixed(1);
-  $('rptChart').innerHTML = '<svg viewBox="0 0 '+W+' '+(H+18)+'" style="width:100%;height:150px;display:block">'+
+  var X = function(i){ return P+i*step; };
+  var Y = function(v){ return H-P-(v/max)*(H-P*2); };
+  var pts = function(a){ return a.map(function(v,i){ return X(i).toFixed(1)+','+Y(v).toFixed(1); }).join(' '); };
+  var lastX = X(n-1).toFixed(1);
+  $('rptChart').innerHTML = '<div class="rpt-wrap"><div id="rptTip" class="rpt-tip"></div>'+
+    '<svg id="rptSvg" viewBox="0 0 '+W+' '+(H+18)+'" style="width:100%;height:150px;display:block;touch-action:pan-y;cursor:pointer">'+
     '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4f46e5" stop-opacity=".28"/><stop offset="100%" stop-color="#4f46e5" stop-opacity="0"/></linearGradient></defs>'+
     '<polygon points="'+P+','+(H-P)+' '+pts(r.cur)+' '+lastX+','+(H-P)+'" fill="url(#g)"/>'+
     '<polyline points="'+pts(r.avg)+'" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4"/>'+
     '<polyline points="'+pts(r.cur)+'" fill="none" stroke="var(--primary)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>'+
-    '<circle cx="'+lastX+'" cy="'+lastY+'" r="4" fill="var(--primary)"/>'+
+    '<line id="rptLine" x1="0" y1="0" x2="0" y2="'+(H-P)+'" stroke="var(--muted)" stroke-width="1"/>'+
+    '<circle id="rptDot" r="5" fill="#fff" stroke="var(--primary)" stroke-width="2.5"/>'+
     '<text x="'+P+'" y="'+(H+13)+'" font-size="10" fill="var(--muted)">1</text>'+
     '<text x="'+(W/2)+'" y="'+(H+13)+'" font-size="10" fill="var(--muted)" text-anchor="middle">15</text>'+
-    '<text x="'+(W-P)+'" y="'+(H+13)+'" font-size="10" fill="var(--muted)" text-anchor="end">'+n+'</text></svg>';
+    '<text x="'+(W-P)+'" y="'+(H+13)+'" font-size="10" fill="var(--muted)" text-anchor="end">'+n+'</text></svg></div>';
+
+  var svg = $('rptSvg'), en = APP_LANG === 'en';
+  var mon = BLN[+S.ym.slice(5,7)-1].slice(0,3);
+  var scrub = function(i){
+    i = Math.max(0, Math.min(n-1, i));
+    var x = X(i);
+    $('rptLine').setAttribute('x1', x); $('rptLine').setAttribute('x2', x);
+    $('rptDot').setAttribute('cx', x);  $('rptDot').setAttribute('cy', Y(r.cur[i]));
+    var tip = $('rptTip');
+    tip.innerHTML = '<b>'+(i+1)+' '+mon+'</b> · <span style="color:var(--primary);font-weight:700">'+mk(rp(r.cur[i]))+'</span>'+
+      (r.avg.length > i ? '<br><small>'+(en ? 'Avg: ' : 'Rata-rata: ')+mk(rp(r.avg[i]))+'</small>' : '');
+    tip.style.left = Math.min(70, Math.max(30, x/W*100)) + '%';
+  };
+  var fromEvent = function(e){
+    var b = svg.getBoundingClientRect();
+    scrub(Math.round(((e.clientX-b.left)/b.width*W - P)/step));
+  };
+  svg.addEventListener('pointerdown', function(e){ svg.setPointerCapture(e.pointerId); fromEvent(e); });
+  svg.addEventListener('pointermove', fromEvent);
+  scrub(n-1);   // default: titik berhenti di hari terakhir (hari ini)
 }
 function num(n){ return n ? Math.round(n).toLocaleString('id-ID') : ''; }
 
