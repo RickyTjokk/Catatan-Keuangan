@@ -669,6 +669,11 @@ nav button.fab.open svg{transform:rotate(45deg)}
 .port-card .pbox b{font-size:12.5px}
 .port-card .pbox small{font-size:10.5px;margin-top:2px}
 .port-empty{display:none;text-align:center;font-size:12px;color:var(--muted);padding:4px 0 2px;line-height:1.45}
+.port-card .pbox{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.port-card .pbox:active{background:var(--primary-soft)}
+.ptg{height:4px;border-radius:99px;background:var(--line);margin-top:7px;overflow:hidden}
+.ptg i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#4f46e5,#8b5cf6);transition:width .5s}
+.ptg-t{display:block;font-size:10px;color:var(--muted);margin-top:4px}
 .port-empty button{color:var(--primary);font-weight:700;font-size:12px;margin-top:4px;display:inline-block}
 
 /* kartu auto-split struk multi-kategori */
@@ -1733,6 +1738,8 @@ var MSG_EN = {
   'Perubahan tersimpan ✅': 'Changes saved ✅',
   'Saldo awal tersimpan ✅': 'Opening balance saved ✅',
   'Budget tersimpan ✅': 'Budget saved ✅',
+  'Target tersimpan ✅': 'Target saved ✅',
+  'Target dihapus': 'Target removed',
   'Budget dihapus dari daftar': 'Budget removed from the list',
   'Penghapusan dibatalkan ↩️': 'Deletion cancelled ↩️',
   'Kategori dinonaktifkan 🗑': 'Category deactivated 🗑',
@@ -2608,12 +2615,18 @@ function render(){
   $('portGrid').innerHTML = (S.portfolio||[]).map(function(p){
     var mTxt = p.monthNet === 0 ? (APP_LANG === 'en' ? 'This mo: Rp 0' : 'Bln ini: Rp 0') : ((APP_LANG === 'en' ? 'This mo: ' : 'Bln ini: ') + (p.monthNet>0?'+':'-') + short(Math.abs(p.monthNet)));
     var cls = p.monthNet > 0 ? 'pos' : (p.monthNet < 0 ? 'neg' : '');
-    return '<div class="pbox">'+
+    var tg = Number(p.target) || 0;
+    var pct = tg > 0 ? Math.min(100, Math.round(Math.max(0, p.total) / tg * 100)) : 0;
+    var tgHtml = tg > 0
+      ? '<div class="ptg"><i style="width:'+pct+'%"></i></div><span class="ptg-t">'+(hide ? '••••' : pct+'% '+(APP_LANG === 'en' ? 'of ' : 'dari ')+short(tg))+'</span>'
+      : '<span class="ptg-t">'+(APP_LANG === 'en' ? '+ Set target' : '+ Atur target')+'</span>';
+    return '<div class="pbox" role="button" tabindex="0" data-c="'+esc(p.cat)+'" onclick="editTarget(this.dataset.c)">'+
       '<div class="ptop"><span>'+p.icon+'</span><span>'+esc(trCat(p.cat))+'</span></div>'+
       '<b>'+(hide ? '••••' : 'Rp '+short(p.total))+'</b>'+
-      '<small class="'+cls+'">'+(hide ? '••••' : mTxt)+'</small></div>';
+      '<small class="'+cls+'">'+(hide ? '••••' : mTxt)+'</small>'+
+      tgHtml+'</div>';
   }).join('');
-  var hasAsset = (S.portfolio||[]).some(function(p){ return p.total !== 0; });
+  var hasAsset = (S.portfolio||[]).some(function(p){ return p.total !== 0 || Number(p.target) > 0; });
   $('portEmpty').style.display = hasAsset ? 'none' : 'block';
    $('portGrid').style.display = hasAsset ? '' : 'none';
   renderReport();
@@ -3024,6 +3037,17 @@ function editBudget(cat){
     setSyncing(true, 'Menyimpan…');
     call('setBudget', cat, v, S.ym)
       .then(function(d){ commitData(d); setSyncing(false); toast(v>0 ? 'Budget tersimpan ✅' : 'Budget dihapus dari daftar'); })
+      .catch(function(e){ setSyncing(false); toast('Gagal: '+(e.message||e)); });
+  });
+}
+function editTarget(cat){
+  var p = (S.portfolio||[]).filter(function(x){ return x.cat === cat; })[0];
+  var cur = p ? (Number(p.target) || 0) : 0;
+  toast('Target ' + trCat(cat));
+  openPadFor(cur, function(v){
+    setSyncing(true, 'Menyimpan…');
+    call('setTarget', cat, v, S.ym)
+      .then(function(d){ commitData(d); setSyncing(false); toast(v>0 ? 'Target tersimpan ✅' : 'Target dihapus'); })
       .catch(function(e){ setSyncing(false); toast('Gagal: '+(e.message||e)); });
   });
 }
