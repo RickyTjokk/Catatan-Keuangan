@@ -763,6 +763,7 @@ function searchTransactions(opts) {
   var q = String(query || '').trim().toLowerCase();
   var fType = String(filterType || 'Semua').trim();
   var fWallet = String(filterWallet || 'Semua').trim();
+  var fEvent = String(opts.eventId || 'Semua').trim();
   var results = [];
   for (var i = 0; i < tRows.length; i++) {
     var r = tRows[i];
@@ -776,8 +777,13 @@ function searchTransactions(opts) {
     var w = String(r[tCol.wallet] || 'Cash').trim() || 'Cash';
     var wTo = String(r[tCol.walletTo] || '').trim();
     var note = String(r[tCol.note] || '').trim();
+    var evId = String(r[tCol.eventId] || '').trim();
     if (!amt && !cat) continue;
     if (fType !== 'Semua' && tp !== fType) continue;
+    if (fEvent !== 'Semua') {
+      if (fEvent === '__NONE__' && evId) continue;
+      if (fEvent !== '__NONE__' && evId !== fEvent) continue;
+    }
     if (fWallet !== 'Semua') {
       var matchFrom = (w === fWallet);
       var matchTo = (tp === 'Transfer' && cat === 'Antar Dompet' && wTo === fWallet);
@@ -1791,6 +1797,108 @@ function getEventTransactions(eventId) {
   return out;
 }
 
+/* ===== KURS VALAS OTOMATIS (LIVE EXCHANGE RATE) ===== */
+function getLiveExchangeRate(currency) {
+  var code = String(currency || 'IDR').trim().toUpperCase().replace(/[^A-Z]/g, '');
+  if (!code || code === 'IDR') return { currency: 'IDR', rate: 1, updated: '' };
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'FX_RATE_' + code;
+  var cached = cache.get(cacheKey);
+  if (cached) {
+    try { return JSON.parse(cached); } catch (ignore) {}
+  }
+  var res = UrlFetchApp.fetch('https://open.er-api.com/v6/latest/' + encodeURIComponent(code), {
+    method: 'get',
+    muteHttpExceptions: true
+  });
+  if (res.getResponseCode() !== 200) throw new Error('Gagal mengambil kurs live untuk ' + code);
+  var json = JSON.parse(res.getContentText());
+  var idrRate = json && json.rates && Number(json.rates.IDR);
+  if (!isFinite(idrRate) || idrRate <= 0) throw new Error('Kurs ' + code + ' ke IDR tidak tersedia');
+  var rounded = idrRate < 100 ? Math.round(idrRate * 100) / 100 : Math.round(idrRate);
+  var out = {
+    currency: code,
+    rate: rounded,
+    updated: String(json.time_last_update_utc || '').slice(0, 16)
+  };
+  try { cache.put(cacheKey, JSON.stringify(out), 21600); } catch (ignore) {}
+  return out;
+}
+
+/* ===== AI FINANCIAL ADVISOR / REVIEW BULANAN (GEMINI) ===== */
+function analyzeMonthWithAI(ym, lang) {
+  var apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!apiKey) throw new Error('ERR_NO_KEY');
+  apiKey = apiKey.trim();
+
+  var d = getData(ym);
+  var isEn = String(lang || 'id').toLowerCase() === 'en';
+  var topCats = (d.categories || []).slice(0, 6).map(function(c) {
+    return c.cat + ': Rp ' + Math.round(c.amount).toLocaleString('id-ID');
+  }).join(', ') || '-';
+  var alerts = (d.budgetAlerts || []).map(function(a) {
+    return a.cat + ' (' + a.pct + '% dari budget Rp ' + Math.round(a.limit).toLocaleString('id-ID') + ')';
+  }).join(', ') || 'Tidak ada';
+  var activeEvs = (d.events || []).filter(function(e) { return e.status !== 'SELESAI'; }).map(function(e) {
+    return e.name + ' (Rp ' + Math.round(e.spent || 0).toLocaleString('id-ID') + ')';
+  }).join(', ') || 'Tidak ada';
+
+  var summaryText =
+    'Bulan: ' + d.ym + '\n' +
+    'Pemasukan: Rp ' + Math.round(d.income || 0).toLocaleString('id-ID') + '\n' +
+    'Pengeluaran: Rp ' + Math.round(d.expense || 0).toLocaleString('id-ID') + '\n' +
+    'Surplus/Defisit: Rp ' + Math.round(d.saving || 0).toLocaleString('id-ID') + '\n' +
+    'Saving Rate: ' + Math.round((d.rate || 0) * 100) + '%\n' +
+    'Rata-rata pengeluaran 3 bulan terakhir (pada tanggal yg sama): Rp ' + Math.round((d.report && d.report.avgTotal) || 0).toLocaleString('id-ID') + '\n' +
+    'Kas Bebas: Rp ' + Math.round(d.freeCash || 0).toLocaleString('id-ID') + ' | Total Aset: Rp ' + Math.round(d.totalAsset || 0).toLocaleString('id-ID') + '\n' +
+    'Pengeluaran Teratas: ' + topCats + '\n' +
+    'Peringatan Budget: ' + alerts + '\n' +
+    'Event Aktif: ' + activeEvs;
+
+  var prompt = isEn
+    ? ('You are a friendly, sharp personal finance advisor. Analyze this monthly financial summary and respond ONLY in valid JSON without markdown:\n' +
+       '{"score": 1-100, "headline": "short 1-sentence verdict", "highlights": ["2-3 concise positive points"], "warnings": ["1-3 concise overspending/risk points"], "tips": ["2-3 concrete actionable tips for next week/month"]}\n\nData:\n' + summaryText)
+    : ('Kamu adalah penasihat keuangan pribadi yang ramah, jujur, dan tajam. Analisa ringkasan keuangan bulanan berikut dan balas HANYA dengan JSON valid tanpa markdown:\n' +
+       '{"score": angka 1-100, "headline": "1 kalimat kesimpulan singkat kondisi bulan ini", "highlights": ["2-3 poin positif singkat"], "warnings": ["1-3 poin waspada/boros singkat"], "tips": ["2-3 saran konkret & praktis untuk minggu/bulan depan"]}\n\nData:\n' + summaryText);
+
+  var models = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash'];
+  var res, code = 0, bodyText = '';
+  for (var i = 0; i < models.length; i++) {
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent';
+    res = UrlFetchApp.fetch(url, {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { 'x-goog-api-key': apiKey },
+      payload: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.3, responseMimeType: 'application/json' }
+      }),
+      muteHttpExceptions: true
+    });
+    code = res.getResponseCode();
+    bodyText = res.getContentText();
+    if (code === 200 || code === 401 || code === 403) break;
+  }
+  if (code !== 200) throw new Error('ERR_AI_FAIL:' + code);
+
+  var json = JSON.parse(bodyText);
+  var parts = json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts;
+  var text = parts ? parts.map(function(p) { return p.text || ''; }).join('') : '';
+  if (!text) throw new Error('ERR_AI_EMPTY');
+  var clean = text.replace(/```json|```/g, '').trim();
+  var fb = clean.indexOf('{'), lb = clean.lastIndexOf('}');
+  if (fb >= 0 && lb > fb) clean = clean.slice(fb, lb + 1);
+  var parsed = JSON.parse(clean);
+  return {
+    ym: d.ym,
+    score: Math.max(0, Math.min(100, Math.round(Number(parsed.score) || 75))),
+    headline: String(parsed.headline || '').trim(),
+    highlights: Array.isArray(parsed.highlights) ? parsed.highlights.slice(0, 4) : [],
+    warnings: Array.isArray(parsed.warnings) ? parsed.warnings.slice(0, 4) : [],
+    tips: Array.isArray(parsed.tips) ? parsed.tips.slice(0, 4) : []
+  };
+}
+
 /* ===== API UNTUK HALAMAN DI GITHUB PAGES ===== */
 var API_MAP_ = {
   getData: getData,
@@ -1812,7 +1920,9 @@ var API_MAP_ = {
   saveEvent: saveEvent,
   toggleEventStatus: toggleEventStatus,
   deleteEvent: deleteEvent,
-  getEventTransactions: getEventTransactions
+  getEventTransactions: getEventTransactions,
+  getLiveExchangeRate: getLiveExchangeRate,
+  analyzeMonthWithAI: analyzeMonthWithAI
 };
 
 function doPost(e) {
