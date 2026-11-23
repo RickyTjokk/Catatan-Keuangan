@@ -1352,6 +1352,25 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
     <button type="button" class="link" id="profCloseBtn" onclick="closeProfileModal()">Tutup</button>
   </div>
   <div class="card" style="margin-bottom:12px">
+    <h3>⚡ Kelola &amp; Fitur</h3>
+    <button type="button" class="catbtn" style="margin-bottom:8px" onclick="openCatManageFromProfile()">
+      <div class="ico">📂</div>
+      <div class="cmid">
+        <b>Kelola Kategori</b>
+        <small>Tambah, hapus &amp; seret urutan kategori / sub-kategori</small>
+      </div>
+      <span class="chev">›</span>
+    </button>
+    <button type="button" class="catbtn" onclick="openEventsFromProfile()">
+      <div class="ico">✈️</div>
+      <div class="cmid">
+        <b>Event &amp; Trip</b>
+        <small>Catat liburan, acara khusus &amp; kurs mata uang asing</small>
+      </div>
+      <span class="chev">›</span>
+    </button>
+  </div>
+  <div class="card" style="margin-bottom:12px">
     <h3 id="prefSecTitle">Tampilan &amp; Bahasa</h3>
     <div class="set-row">
       <div class="sl">
@@ -2668,8 +2687,22 @@ function go(v){
   $('v-'+v).classList.add('on');
   var navTarget = v === 'cats' ? 'home' : (v === 'lap' ? 'list' : v);
   document.querySelectorAll('nav button').forEach(function(b){b.classList.toggle('on', b.dataset.v===navTarget);});
-  if($('profBtn')) $('profBtn').style.display = (v === 'home') ? 'flex' : 'none';
+  if($('profBtn')) $('profBtn').style.display = 'flex';
   window.scrollTo(0,0);
+}
+function openCatManageFromProfile(){
+  closeProfileModal();
+  if(!S) return;
+  openCatModal('add');
+  cmManageMode = true;
+  $('cmEditToggle').classList.add('on');
+  $('cmEditToggle').textContent = APP_LANG === 'en' ? 'Done' : 'Selesai';
+  renderCatModal();
+}
+function openEventsFromProfile(){
+  closeProfileModal();
+  go('budget');
+  setBudgetTab('event');
 }
 function shift(d){
   var baseYm = (S && S.ym) ? S.ym : localYm();
