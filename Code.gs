@@ -909,7 +909,83 @@ function addCategory(payload, ym) {
         }
       }
     }
-    sh.appendRow([type, cat, icon, sub, sub ? subIcon : '', 'YA']);
+    var newRow = [type, cat, icon, sub, sub ? subIcon : '', 'YA'];
+    var insertAt = -1;
+    var tailNames = ['lainnya', 'pemasukan lain'];
+    if (last > 1 && tailNames.indexOf(cat.toLowerCase()) < 0) {
+      var allRows = sh.getRange(2, 1, last - 1, 6).getValues();
+      for (var j = 0; j < allRows.length; j++) {
+        var rt = String(allRows[j][0] || '').trim().toLowerCase();
+        var rc = String(allRows[j][1] || '').trim().toLowerCase();
+        var ra = String(allRows[j][5] || 'YA').trim().toUpperCase();
+        if (rt === type.toLowerCase() && ra !== 'TIDAK' && tailNames.indexOf(rc) >= 0) {
+          insertAt = j + 2;
+          break;
+        }
+      }
+    }
+    if (insertAt >= 2) {
+      sh.insertRowBefore(insertAt);
+      sh.getRange(insertAt, 1, 1, 6).setValues([newRow]);
+    } else {
+      sh.appendRow(newRow);
+    }
+    invalidateDataCache_();
+    return getData(ym || null);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function reorderCategory(type, cat, dir, ym) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var env = ensureSheets_();
+    var sh = env.katSh;
+    var last = sh.getLastRow();
+    if (last <= 1) return getData(ym || null);
+    var rows = sh.getRange(2, 1, last - 1, 6).getValues();
+    var tLow = String(type || 'Pengeluaran').trim().toLowerCase();
+    var cLow = String(cat || '').trim().toLowerCase();
+
+    var otherRows = [];
+    var groupOrder = [];
+    var groupMap = {};
+    rows.forEach(function(r) {
+      var rt = String(r[0] || '').trim().toLowerCase();
+      var rc = String(r[1] || '').trim();
+      var rcLow = rc.toLowerCase();
+      var ra = String(r[5] || 'YA').trim().toUpperCase();
+      if (rt === tLow && rc && ra !== 'TIDAK') {
+        if (!groupMap[rcLow]) {
+          groupMap[rcLow] = [];
+          groupOrder.push(rcLow);
+        }
+        groupMap[rcLow].push(r);
+      } else {
+        otherRows.push(r);
+      }
+    });
+
+    var idx = groupOrder.indexOf(cLow);
+    if (idx < 0) return getData(ym || null);
+    var swapIdx = dir === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= groupOrder.length) return getData(ym || null);
+
+    var tmp = groupOrder[idx];
+    groupOrder[idx] = groupOrder[swapIdx];
+    groupOrder[swapIdx] = tmp;
+
+    var rebuilt = [];
+    groupOrder.forEach(function(k) {
+      groupMap[k].forEach(function(r) { rebuilt.push(r); });
+    });
+    otherRows.forEach(function(r) { rebuilt.push(r); });
+
+    if (rebuilt.length) {
+      sh.getRange(2, 1, rebuilt.length, 6).setValues(rebuilt);
+    }
     invalidateDataCache_();
     return getData(ym || null);
   } finally {
@@ -1801,13 +1877,19 @@ function getEventTransactions(eventId) {
 function getLiveExchangeRate(currency) {
   var code = String(currency || 'IDR').trim().toUpperCase().replace(/[^A-Z]/g, '');
   if (!code || code === 'IDR') return { currency: 'IDR', rate: 1, updated: '' };
+  var isoMap = { RMB: 'CNY', NTD: 'TWD' };
+  var iso = isoMap[code] || code;
   var cache = CacheService.getScriptCache();
-  var cacheKey = 'FX_RATE_' + code;
+  var cacheKey = 'FX_RATE_' + iso;
   var cached = cache.get(cacheKey);
   if (cached) {
-    try { return JSON.parse(cached); } catch (ignore) {}
+    try {
+      var cObj = JSON.parse(cached);
+      cObj.currency = code;
+      return cObj;
+    } catch (ignore) {}
   }
-  var res = UrlFetchApp.fetch('https://open.er-api.com/v6/latest/' + encodeURIComponent(code), {
+  var res = UrlFetchApp.fetch('https://open.er-api.com/v6/latest/' + encodeURIComponent(iso), {
     method: 'get',
     muteHttpExceptions: true
   });
@@ -1906,6 +1988,7 @@ var API_MAP_ = {
   addWallet: addWallet,
   deleteWallet: deleteWallet,
   addCategory: addCategory,
+  reorderCategory: reorderCategory,
   deleteCategory: deleteCategory,
   addTransaction: addTransaction,
   addMultipleTransactions: addMultipleTransactions,
