@@ -791,7 +791,61 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
 .cal-in{color:var(--green)}
 .cal-out{color:var(--red)}
 .dcard{scroll-margin-top:12px}
-  
+
+/* ===== FITUR EVENT & TRIP (MULTI-CURRENCY) ===== */
+.bud-seg{display:flex;background:var(--card);border-radius:16px;padding:4px;gap:4px;margin-bottom:12px;box-shadow:var(--shadow)}
+.bud-seg button{flex:1;min-height:40px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s}
+.bud-seg button.on{background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(79,70,229,.25)}
+.ev-banner{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(79,70,229,.12),rgba(16,185,129,.10));border:1px solid rgba(79,70,229,.22);border-radius:18px;padding:12px 14px;margin-bottom:12px;cursor:pointer}
+.ev-banner:active{transform:scale(.99)}
+.ev-banner-ico{width:40px;height:40px;border-radius:13px;background:var(--card);display:grid;place-items:center;font-size:20px;flex:none;box-shadow:var(--shadow)}
+.ev-banner-mid{flex:1;min-width:0}
+.ev-banner-mid b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-banner-mid small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.ev-banner-amt{text-align:right;flex:none}
+.ev-banner-amt b{display:block;font-size:13.5px;color:var(--primary)}
+.ev-banner-amt small{display:block;font-size:11px;color:var(--muted)}
+.ev-card{background:var(--card);border-radius:18px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer;border:1px solid transparent;transition:transform .12s}
+.ev-card:active{transform:scale(.99)}
+.ev-card.done{opacity:.75}
+.ev-top{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+.ev-ico{width:42px;height:42px;border-radius:14px;background:var(--primary-soft);display:grid;place-items:center;font-size:21px;flex:none}
+.ev-mid{flex:1;min-width:0}
+.ev-mid b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-mid small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.ev-badge{font-size:10.5px;font-weight:800;padding:4px 8px;border-radius:999px;background:var(--primary-soft);color:var(--primary);flex:none}
+.ev-badge.done{background:var(--bg);color:var(--muted)}
+.ev-nums{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px;font-size:12.5px}
+.ev-nums b{font-size:14.5px}
+.ev-bar{height:7px;border-radius:999px;background:var(--bg);overflow:hidden;margin-bottom:6px}
+.ev-bar i{display:block;height:100%;border-radius:999px;background:var(--primary);transition:width .3s}
+.ev-bar i.over{background:var(--red)}
+.ev-foot{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+.ev-tag{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--primary-soft);color:var(--primary);margin-top:3px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fx-box{display:none;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:8px 11px;border-radius:12px;background:var(--primary-soft);font-size:12px}
+.fx-box.on{display:flex}
+.fx-box b{color:var(--primary);font-size:13px}
+.fx-rate-btn{border:1px solid rgba(79,70,229,.25);background:var(--card);color:var(--primary);border-radius:9px;padding:4px 9px;font-size:11.5px;font-weight:700;font-family:inherit;cursor:pointer}
+.fx-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--bg);color:var(--text);border:1px solid var(--line);cursor:pointer;font-family:inherit}
+#evModal,#evDetailModal{
+  position:fixed;left:0;right:0;bottom:0;z-index:26;max-width:540px;margin:0 auto;
+  background:var(--card);border-radius:24px 24px 0 0;padding:16px 18px calc(22px + env(safe-area-inset-bottom));
+  transform:translateY(105%);transition:transform .26s cubic-bezier(.22,1,.36,1);max-height:90dvh;overflow-y:auto
+}
+#evModal.open,#evDetailModal.open{transform:translateY(0)}
+#evBg,#evDetailBg{position:fixed;inset:0;z-index:25;background:rgba(15,23,42,.45);opacity:0;pointer-events:none;transition:opacity .2s}
+#evBg.open,#evDetailBg.open{opacity:1;pointer-events:auto}
+.ev-cur-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px}
+.ev-cur-grid button{min-height:36px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.ev-cur-grid button.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+.ev-sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.ev-sum-box{background:var(--bg);border-radius:14px;padding:10px 12px}
+.ev-sum-box small{display:block;font-size:11px;color:var(--muted);margin-bottom:2px}
+.ev-sum-box b{font-size:14.5px}
+.ev-act-row{display:flex;gap:8px;margin-top:12px}
+.ev-act-row button{flex:1;min-height:42px;border-radius:13px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.ev-act-row button.pri{background:var(--primary);color:#fff;border-color:var(--primary)}
+.ev-act-row button.dng{color:var(--red);border-color:rgba(239,68,68,.25)}
 </style>
 </head>
 <body>
@@ -836,6 +890,7 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
       <div class="meta" id="hMeta"></div>
     </div>
     <div id="homeBudgetAlerts"></div>
+    <div id="homeActiveEvents"></div>
     <div class="card port-card" id="portCard">
       <div class="port-hdr" onclick="this.parentElement.classList.toggle('open')" role="button" tabindex="0">
         <div class="port-hdr-l">
@@ -942,36 +997,62 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
     <div class="bnote" id="lblWalletNote">Ketuk dompet untuk mengatur saldo awal atau menghapus · Ketuk <b>Mutasi</b> untuk riwayat dompet</div>
   </section>
 
-  <!-- BUDGETING -->
+  <!-- BUDGETING & EVENT -->
   <section class="view" id="v-budget">
-    <div class="hero">
-      <small id="lblBRemain">Sisa budget bulan ini</small>
-      <div class="big" id="bRemain">Rp 0</div>
-      <div class="row">
-        <div class="chip"><small id="lblBTot">🎯 Total budget</small><b id="bTotal">Rp 0</b></div>
-        <div class="chip"><small id="lblBSpent">🔥 Terpakai</small><b id="bSpent">Rp 0</b></div>
+    <div class="bud-seg">
+      <button type="button" id="segBudBtn" class="on" onclick="setBudgetTab('monthly')">🎯 Budget Bulanan</button>
+      <button type="button" id="segEvBtn" onclick="setBudgetTab('event')">✈️ Event &amp; Trip</button>
+    </div>
+    <div id="budTabMonthly">
+      <div class="hero">
+        <small id="lblBRemain">Sisa budget bulan ini</small>
+        <div class="big" id="bRemain">Rp 0</div>
+        <div class="row">
+          <div class="chip"><small id="lblBTot">🎯 Total budget</small><b id="bTotal">Rp 0</b></div>
+          <div class="chip"><small id="lblBSpent">🔥 Terpakai</small><b id="bSpent">Rp 0</b></div>
+        </div>
+        <div id="bSafeBox" class="sts-pill" style="display:none">
+          <div class="sts-l" id="bSafeLbl">Safe-to-Spend harian</div>
+          <div class="sts-r">
+            <b id="bSafeAmt">Rp 0/hr</b>
+            <small id="bSafeSub">Sisa 0 hari</small>
+          </div>
+        </div>
+        <div class="meta" id="bMeta"></div>
       </div>
-      <div id="bSafeBox" class="sts-pill" style="display:none">
-        <div class="sts-l" id="bSafeLbl">Safe-to-Spend harian</div>
-        <div class="sts-r">
-          <b id="bSafeAmt">Rp 0/hr</b>
-          <small id="bSafeSub">Sisa 0 hari</small>
+      <div class="card">
+        <div class="chead">
+          <div>
+            <h3 id="lblBPlan">Budget terencana</h3>
+            <span id="bPaceHdr" style="font-size:11.5px;color:var(--muted);font-weight:500"></span>
+          </div>
+          <button type="button" id="bAddBtn" class="add-bud-btn" onclick="openBudAddModal()">+ Tambah Budget</button>
+        </div>
+        <div id="budPaceLeg"></div>
+        <div id="budList"></div>
+      </div>
+      <div class="bnote" id="budFootNote">Ketuk kategori di atas untuk mengubah nominal budget.<br>Isi 0 jika ingin menghapus kategori dari rencana budget.</div>
+    </div>
+    <div id="budTabEvent" style="display:none">
+      <div class="hero">
+        <div class="htop">
+          <small id="lblEvHero">Total pengeluaran event aktif</small>
+          <button type="button" class="add-bud-btn" style="background:rgba(255,255,255,.22);color:#fff" onclick="openEvModal()">+ Buat Event</button>
+        </div>
+        <div class="big" id="evHeroTot">Rp 0</div>
+        <div class="row">
+          <div class="chip"><small id="lblEvActCnt">🔥 Event Aktif</small><b id="evActCnt">0</b></div>
+          <div class="chip"><small id="lblEvDoneCnt">✅ Selesai</small><b id="evDoneCnt">0</b></div>
         </div>
       </div>
-      <div class="meta" id="bMeta"></div>
-    </div>
-    <div class="card">
-      <div class="chead">
-        <div>
-          <h3 id="lblBPlan">Budget terencana</h3>
-          <span id="bPaceHdr" style="font-size:11.5px;color:var(--muted);font-weight:500"></span>
+      <div id="evActiveList"></div>
+      <div id="evDoneWrap" style="display:none">
+        <div class="chead" style="margin:14px 4px 8px">
+          <h3 id="lblEvDoneTitle" style="font-size:13px;color:var(--muted)">Event Selesai / Arsip</h3>
         </div>
-        <button type="button" id="bAddBtn" class="add-bud-btn" onclick="openBudAddModal()">+ Tambah Budget</button>
+        <div id="evDoneList"></div>
       </div>
-      <div id="budPaceLeg"></div>
-      <div id="budList"></div>
     </div>
-    <div class="bnote" id="budFootNote">Ketuk kategori di atas untuk mengubah nominal budget.<br>Isi 0 jika ingin menghapus kategori dari rencana budget.</div>
   </section>
 
   <!-- TAMBAH -->
@@ -1033,6 +1114,10 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
         <div class="amount">
           <small id="lblAmtTap">Jumlah (Rp) · ketuk untuk mengisi</small>
           <input id="fAmt" inputmode="none" readonly placeholder="0" autocomplete="off" onclick="openPad()">
+          <div class="fx-box" id="fFxBox">
+            <div><span id="fFxLabel">Konversi ke Rupiah:</span> <b id="fFxIdr">Rp 0</b></div>
+            <button type="button" class="fx-rate-btn" id="fFxRateBtn" onclick="editTxFxRate('add')">Kurs: 1 = Rp 1</button>
+          </div>
         </div>
         <h3 id="fCatTitle" style="margin-bottom:8px">Kategori</h3>
         <button type="button" class="catbtn" onclick="openCatModal('add')">
@@ -1047,6 +1132,7 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
       <div class="card">
         <div class="field"><span id="fWalletTitle">Dibayar dari</span><div class="wchips" id="fWallets"></div></div>
         <div class="field" id="fWalletToBox" style="display:none"><span id="lblToWallet">Ke dompet</span><div class="wchips" id="fWalletsTo"></div></div>
+        <div class="field" id="fEventBox" style="display:none"><span id="lblEventField">Event / Trip (opsional)</span><div class="wchips" id="fEvents"></div></div>
         <div class="add-row2">
           <div class="field">
             <div class="date-lbl-row">
@@ -1362,8 +1448,12 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
 <div id="edit" role="dialog" aria-label="Edit transaksi">
   <div class="ehead"><b>Edit transaksi</b><button class="link" onclick="closeEdit()">Tutup</button></div>
   <div class="card" style="margin-bottom:12px">
-    <div class="amount"><small>Jumlah (Rp) · ketuk untuk mengubah</small>
+    <div class="amount"><small id="eAmtLbl">Jumlah (Rp) · ketuk untuk mengubah</small>
       <input id="eAmt" inputmode="none" readonly placeholder="0" autocomplete="off" onclick="openPad('eAmt')">
+      <div class="fx-box" id="eFxBox">
+        <div><span id="eFxLabel">Konversi ke Rupiah:</span> <b id="eFxIdr">Rp 0</b></div>
+        <button type="button" class="fx-rate-btn" id="eFxRateBtn" onclick="editTxFxRate('edit')">Kurs: 1 = Rp 1</button>
+      </div>
     </div>
   </div>
   <div class="card" style="margin-bottom:12px">
@@ -1378,6 +1468,7 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
     </button>
     <div class="field"><span id="eWalletTitle">Dibayar dari</span><div class="wchips" id="eWallets"></div></div>
     <div class="field" id="eWalletToBox" style="display:none"><span>Ke dompet</span><div class="wchips" id="eWalletsTo"></div></div>
+    <div class="field" id="eEventBox" style="display:none"><span id="eEventTitle">Event / Trip (opsional)</span><div class="wchips" id="eEvents"></div></div>
     <label class="field"><span>Catatan</span><input id="eNote" maxlength="200" placeholder="Catatan (opsional)"></label>
     <div class="field"><span>Tanggal</span>
       <div class="datebar">
@@ -1389,6 +1480,59 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
   </div>
   <button class="primary" id="eSave" onclick="saveEdit()">Simpan perubahan</button>
   <button class="deltx" onclick="delEdit()">🗑 Hapus transaksi</button>
+</div>
+
+<!-- MODAL BUAT / EDIT EVENT -->
+<div id="evBg" onclick="closeEvModal()"></div>
+<div id="evModal" role="dialog" aria-label="Buat atau Edit Event">
+  <div class="ehead">
+    <b id="evModalTitle">✈️ Buat Event Baru</b>
+    <button type="button" class="link" onclick="closeEvModal()">Tutup</button>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="field">
+      <span id="evIcoLbl">Pilih Ikon</span>
+      <div class="wchips" id="evEmojis"></div>
+    </div>
+    <label class="field">
+      <span id="evNameLbl">Nama Event</span>
+      <input id="evNameIn" maxlength="40" placeholder="mis. Trip Jepang, Nikahan, Renovasi">
+    </label>
+    <div class="field">
+      <span id="evCurLbl">Mata Uang Event</span>
+      <div class="ev-cur-grid" id="evCurGrid"></div>
+    </div>
+    <label class="field" id="evRateWrap" style="display:none">
+      <span id="evRateLbl">Kurs ke Rupiah (1 Mata Uang = Rp ?)</span>
+      <input id="evRateIn" type="number" step="any" min="0.01" placeholder="mis. 105">
+    </label>
+    <label class="field">
+      <span id="evBudLbl">Target Budget (Rp, opsional)</span>
+      <input id="evBudIn" type="number" min="0" placeholder="mis. 15000000">
+    </label>
+    <div class="add-row2">
+      <label class="field"><span id="evStartLbl">Tanggal Mulai</span><input type="date" id="evStartIn"></label>
+      <label class="field"><span id="evEndLbl">Tanggal Selesai</span><input type="date" id="evEndIn"></label>
+    </div>
+    <div class="set-row" style="padding:10px 0 2px;border:0">
+      <div class="sl">
+        <b id="evExclLbl" style="font-size:13px">Kecualikan dari grafik rata-rata</b>
+        <small id="evExclSub">Agar pengeluaran besar (nikahan/trip) tidak merusak rata-rata harian</small>
+      </div>
+      <label class="sw"><input type="checkbox" id="evExclIn"><span class="slid"></span></label>
+    </div>
+  </div>
+  <button type="button" class="primary" id="evSaveBtn" onclick="saveEventForm()">Simpan Event</button>
+</div>
+
+<!-- MODAL DETAIL EVENT -->
+<div id="evDetailBg" onclick="closeEvDetail()"></div>
+<div id="evDetailModal" role="dialog" aria-label="Detail Event">
+  <div class="ehead">
+    <b id="evDetTitle">✈️ Detail Event</b>
+    <button type="button" class="link" onclick="closeEvDetail()">Tutup</button>
+  </div>
+  <div id="evDetBody"></div>
 </div>
 
 <!-- KEYPAD KALKULATOR -->
@@ -1436,6 +1580,15 @@ var type = 'Pengeluaran';
 var pickedCat = null;
 var pickedSub = null;
 var pickedWallet = 'Cash', pickedWalletTo = null;
+var pickedEventId = '', pickedFxRate = 1;
+var eEventId = '', eFxRate = 1;
+var budgetSubTab = 'monthly';
+var EV_CURRENCIES = [
+  {c:'IDR',s:'Rp',r:1},{c:'JPY',s:'¥',r:105},{c:'SGD',s:'S$',r:11800},{c:'MYR',s:'RM',r:3550},{c:'THB',s:'฿',r:460},
+  {c:'USD',s:'$',r:15800},{c:'EUR',s:'€',r:17000},{c:'KRW',s:'₩',r:11.5},{c:'AUD',s:'A$',r:10400},{c:'GBP',s:'£',r:20000}
+];
+var EV_EMOJIS = ['✈️','💍','🏠','🎓','🏖️','🏕️','🎉','🚗','🏥','🛍️','🎤','👶'];
+var evEditId = '', evPickedIcon = '✈️', evPickedCur = 'IDR', evDetailId = '';
 var TRF_ANTAR = 'Antar Dompet';
 var listFilterType = 'Semua';
 var listFilterWallet = 'Semua';
@@ -2624,6 +2777,7 @@ function render(){
     $('hMeta').textContent = parts.join(' · ');
   }
   renderBudgetAlerts();
+  renderHomeActiveEvents();
   $('portTot').textContent = mk(rp(S.totalAsset));
   $('portGrid').innerHTML = (S.portfolio||[]).map(function(p){
     var mTxt = p.monthNet === 0 ? (APP_LANG === 'en' ? 'This mo: Rp 0' : 'Bln ini: Rp 0') : ((APP_LANG === 'en' ? 'This mo: ' : 'Bln ini: ') + (p.monthNet>0?'+':'-') + short(Math.abs(p.monthNet)));
@@ -2655,6 +2809,7 @@ function render(){
   renderLaporan();
   renderWallets();
   renderBudget();
+  renderEventsPage();
   renderHabits();
   renderForm();
 }
@@ -2672,9 +2827,10 @@ function renderRecent(){
     var q = t.date.split('-').map(Number);
     var dStr = dayLabel(t.date) + ', ' + ('0'+q[2]).slice(-2) + ' ' + BLN[q[1]-1].slice(0,3);
     var subText = dStr + ' · ' + esc(walletLbl(t)) + (t.note ? ' · ' + esc(t.note) : '');
+    var evTag = txEventBadgeHtml(t);
     return '<div class="drow" onclick="openEdit(\''+esc(t.id)+'\')">'+
       '<div class="ico">'+iconOf(t.cat, t.type, t.sub)+'</div>'+
-      '<div class="mid"><b>'+title+'</b><small>'+subText+'</small></div>'+
+      '<div class="mid"><b>'+title+'</b><small>'+subText+'</small>'+evTag+'</div>'+
       '<div class="amt '+cls+'">'+sign+mk(rp(t.amount))+'</div></div>';
   }).join('');
 }
@@ -3447,6 +3603,7 @@ function renderForm(){
   $('fNote').placeholder = isTrf ? (APP_LANG === 'en' ? 'e.g. monthly savings' : 'mis. nabung rutin bulanan') : (APP_LANG === 'en' ? 'e.g. lunch' : 'mis. makan siang');
   if(!$('fDate').value) $('fDate').value = S.today;
   updateDateVisual();
+  if(typeof renderFormEventBox === 'function') renderFormEventBox();
 }
 function setType(t){
   type=t; pickedCat=null; pickedSub=null;
@@ -3728,10 +3885,21 @@ function openEdit(id){
   var pool = listAllMonths ? crossMonthTxs : visibleTxs();
   var t = pool.filter(function(x){ return x.id===id; })[0];
   if(!t) t = visibleTxs().filter(function(x){ return x.id===id; })[0];
+  if(!t && typeof evDetailTxs !== 'undefined') t = evDetailTxs.filter(function(x){ return x.id===id; })[0];
   if(!t) return;
   eId = id; eType = t.type; eCat = t.cat; eSub = t.sub || null;
   eWallet = t.wallet || 'Cash'; eWalletTo = t.walletTo || null;
-  $('eAmt').value = num(t.amount); $('eNote').value = t.note || ''; $('eDate').value = t.date;
+  eEventId = t.eventId || '';
+  var ev = findEventById(eEventId);
+  if(ev && ev.currency && ev.currency !== 'IDR'){
+    var fxAmt = Number(t.fxAmount) || 0;
+    eFxRate = (fxAmt > 0 && t.amount > 0) ? Math.round((t.amount / fxAmt) * 100) / 100 : (Number(ev.rate) || 1);
+    $('eAmt').value = fxAmt > 0 ? num(fxAmt) : num(Math.round(t.amount / (eFxRate || 1)));
+  } else {
+    eFxRate = 1;
+    $('eAmt').value = num(t.amount);
+  }
+  $('eNote').value = t.note || ''; $('eDate').value = t.date;
   renderEdit();
   $('editBg').classList.add('open'); $('edit').classList.add('open');
 }
@@ -3749,6 +3917,7 @@ function renderEdit(){
   walletChips('eWallets', eWallet, 'setEWallet');
   $('eWalletToBox').style.display = isAntar ? '' : 'none';
   if(isAntar) walletChips('eWalletsTo', eWalletTo, 'setEWalletTo', eWallet);
+  if(typeof renderEditEventBox === 'function') renderEditEventBox();
 }
 function fShift(d){
   var el = $('fDate');
@@ -3762,18 +3931,23 @@ function eShift(d){
   $('eDate').value = ymd(new Date(p[0], p[1]-1, p[2]+d));
 }
 function saveEdit(){
-  var amt = Number($('eAmt').value.replace(/\D/g,''));
-  if(!amt){ toast('Isi jumlah dulu ya'); return; }
+  var rawAmt = Number($('eAmt').value.replace(/\D/g,''));
+  if(!rawAmt){ toast('Isi jumlah dulu ya'); return; }
   var date = $('eDate').value;
   if(!date){ toast('Pilih tanggal dulu'); return; }
+  var ev = findEventById(eEventId);
+  var isFx = !!(ev && ev.currency && ev.currency !== 'IDR');
+  var idrAmt = isFx ? Math.max(1, Math.round(rawAmt * (eFxRate || ev.rate || 1))) : rawAmt;
   var btn = $('eSave'); btn.disabled = true; btn.textContent = trMsg('Menyimpan…');
   setSyncing(true, 'Menyimpan…');
-  call('updateTransaction', {id:eId, type:eType, cat:eCat, sub:eSub||'', amount:amt, date:date, note:$('eNote').value,
-    wallet:eWallet, walletTo:(eType==='Transfer' && eCat===TRF_ANTAR) ? eWalletTo : ''}, S.ym)
+  call('updateTransaction', {id:eId, type:eType, cat:eCat, sub:eSub||'', amount:idrAmt, date:date, note:$('eNote').value,
+    wallet:eWallet, walletTo:(eType==='Transfer' && eCat===TRF_ANTAR) ? eWalletTo : '',
+    eventId: eEventId || '', currency: isFx ? ev.currency : '', fxAmount: isFx ? rawAmt : 0}, S.ym)
     .then(function(d){
       var moved = date.slice(0,7) !== S.ym;
       commitData(d); closeEdit(); setSyncing(false);
       if(listAllMonths) fetchCrossMonth();
+      if($('evDetailModal').classList.contains('open') && evDetailId) openEvDetail(evDetailId);
       toast(moved ? 'Tersimpan · dipindah ke '+BLN[+date.slice(5,7)-1]+' '+date.slice(0,4) : 'Perubahan tersimpan ✅');
     })
     .catch(function(e){ setSyncing(false); toast('Gagal: '+(e.message||e)); })
@@ -3935,6 +4109,8 @@ function padDone(){
   var allowZero = !!padCb || padTarget === 'waOpening';
   if(r < 0 || (r === 0 && !allowZero)){ toast('Jumlah harus lebih dari 0'); return; }
   $(padTarget).value = r > 0 ? r.toLocaleString('id-ID') : '';
+  if(padTarget === 'fAmt' && typeof updateTxFxPreview === 'function') updateTxFxPreview('add');
+  if(padTarget === 'eAmt' && typeof updateTxFxPreview === 'function') updateTxFxPreview('edit');
   var cb = padCb;
   closePad();
   if(cb) cb(r);
@@ -4017,8 +4193,20 @@ function applyOptimisticTxs(txList){
     base.transactions.unshift({
       id: 'OPT-' + Date.now() + '-' + idx,
       date: tx.date, type: tp, cat: cat, sub: sub || null,
-      amount: amt, wallet: w, walletTo: wTo || null, note: tx.note || ''
+      amount: amt, wallet: w, walletTo: wTo || null, note: tx.note || '',
+      eventId: tx.eventId || '', currency: tx.currency || '', fxAmount: Number(tx.fxAmount) || 0
     });
+
+    if(tx.eventId && Array.isArray(base.events)){
+      base.events.forEach(function(ev){
+        if(ev.id === tx.eventId){
+          ev.txCount = (ev.txCount || 0) + 1;
+          var fxV = Number(tx.fxAmount) || 0;
+          if(tp === 'Pengeluaran'){ ev.spent = (ev.spent || 0) + amt; ev.fxSpent = (ev.fxSpent || 0) + fxV; }
+          else if(tp === 'Pemasukan'){ ev.income = (ev.income || 0) + amt; ev.fxIncome = (ev.fxIncome || 0) + fxV; }
+        }
+      });
+    }
 
     if(tp === 'Pemasukan'){
       base.income = (base.income || 0) + amt;
@@ -4093,6 +4281,7 @@ function applyOptimisticTxs(txList){
 
 function save(){
   var date = $('fDate').value || S.today;
+  var ev = findEventById(pickedEventId);
 
   // Mode Split Struk (Multi-Transaksi)
   if(splitMode && splitItems.length > 1){
@@ -4106,7 +4295,10 @@ function save(){
           amount: it.amount,
           wallet: pickedWallet,
           walletTo: (type === 'Transfer' && pickedCat === TRF_ANTAR) ? pickedWalletTo : '',
-          note: it.note || ''
+          note: it.note || '',
+          eventId: pickedEventId || '',
+          currency: '',
+          fxAmount: 0
         };
       });
     if(!txList.length){ toast('Jumlah harus lebih dari 0'); return; }
@@ -4148,8 +4340,10 @@ function save(){
   }
 
   // Mode Transaksi Tunggal
-  var amt = Number($('fAmt').value.replace(/\D/g,''));
-  if(!amt){ toast('Isi jumlah dulu ya'); $('fAmt').focus(); return; }
+  var rawAmt = Number($('fAmt').value.replace(/\D/g,''));
+  if(!rawAmt){ toast('Isi jumlah dulu ya'); $('fAmt').focus(); return; }
+  var isFx = !!(ev && ev.currency && ev.currency !== 'IDR');
+  var amt = isFx ? Math.max(1, Math.round(rawAmt * (pickedFxRate || ev.rate || 1))) : rawAmt;
   if(scanFilled){
     var sig = [type, date, amt, pickedWallet].join('|');
     var dup = findDuplicateTx(amt, date, pickedWallet, type);
@@ -4162,7 +4356,8 @@ function save(){
 
   var txObj = {
     type: type, cat: pickedCat, sub: pickedSub || '', amount: amt, date: date, note: $('fNote').value,
-    wallet: pickedWallet, walletTo: (type === 'Transfer' && pickedCat === TRF_ANTAR) ? pickedWalletTo : ''
+    wallet: pickedWallet, walletTo: (type === 'Transfer' && pickedCat === TRF_ANTAR) ? pickedWalletTo : '',
+    eventId: pickedEventId || '', currency: isFx ? ev.currency : '', fxAmount: isFx ? rawAmt : 0
   };
   var snapSingle = applyOptimisticTxs([txObj]);
 
@@ -4371,9 +4566,10 @@ function renderDays(){
       var sign = isTrf ? (isWithdraw(t.sub) ? '⬅ ' : '➡ ') : (isIn ? '+' : '-');
       var title = esc(trCat(t.cat)) + (t.sub ? ' · ' + esc(trCat(t.sub)) : '');
       var subText = esc(walletLbl(t)) + (t.note ? ' · ' + esc(t.note) : '');
+      var evTag = txEventBadgeHtml(t);
       return '<div class="drow" onclick="openEdit(\''+esc(t.id)+'\')">'+
         '<div class="ico">'+iconOf(t.cat, t.type, t.sub)+'</div>'+
-        '<div class="mid"><b>'+title+'</b><small>'+subText+'</small></div>'+
+        '<div class="mid"><b>'+title+'</b><small>'+subText+'</small>'+evTag+'</div>'+
         '<div class="amt '+cls+'">'+sign+mk(rp(t.amount))+'</div></div>';
     }).join('');
     var netTxt = net===0 ? 'Rp 0' : (net>0?'+':'-')+rp(Math.abs(net));
@@ -4553,6 +4749,344 @@ function renderLaporan(){
   $('lapOutList').innerHTML = lapRowsHtml(out, totOut, 'Pengeluaran');
 }
       
+/* ===== MODUL EVENT & TRIP (MULTI-CURRENCY) ===== */
+var evDetailTxs = [];
+function findEventById(id){
+  if(!id || !S || !Array.isArray(S.events)) return null;
+  for(var i = 0; i < S.events.length; i++){
+    if(S.events[i].id === id) return S.events[i];
+  }
+  return null;
+}
+function curMeta(code){
+  var c = String(code || 'IDR').toUpperCase();
+  for(var i = 0; i < EV_CURRENCIES.length; i++){
+    if(EV_CURRENCIES[i].c === c) return EV_CURRENCIES[i];
+  }
+  return { c: c, s: c + ' ', r: 1 };
+}
+function fmtFx(n, code){
+  var m = curMeta(code);
+  var v = Number(n) || 0;
+  var txt = Math.round(Math.abs(v)).toLocaleString('id-ID');
+  return (v < 0 ? '-' : '') + m.s + (m.s.length > 1 ? ' ' : '') + txt;
+}
+function txEventBadgeHtml(t){
+  if(!t || !t.eventId) return '';
+  var ev = findEventById(t.eventId);
+  var lbl = ev ? (ev.icon + ' ' + ev.name) : ('🏷️ ' + t.eventId);
+  var fxStr = (t.currency && t.currency !== 'IDR' && Number(t.fxAmount) > 0)
+    ? ' · ' + fmtFx(t.fxAmount, t.currency)
+    : '';
+  return '<div><span class="ev-tag">' + esc(lbl + fxStr) + '</span></div>';
+}
+function setBudgetTab(tab){
+  budgetSubTab = tab === 'event' ? 'event' : 'monthly';
+  var isEv = budgetSubTab === 'event';
+  if($('segBudBtn')) $('segBudBtn').classList.toggle('on', !isEv);
+  if($('segEvBtn')) $('segEvBtn').classList.toggle('on', isEv);
+  if($('budTabMonthly')) $('budTabMonthly').style.display = isEv ? 'none' : '';
+  if($('budTabEvent')) $('budTabEvent').style.display = isEv ? '' : 'none';
+  if(isEv) renderEventsPage();
+}
+function renderHomeActiveEvents(){
+  var box = $('homeActiveEvents');
+  if(!box || !S) return;
+  var active = (S.events || []).filter(function(e){ return e.status !== 'SELESAI'; });
+  if(!active.length){ box.innerHTML = ''; return; }
+  box.innerHTML = active.slice(0, 2).map(function(ev){
+    var isFx = ev.currency && ev.currency !== 'IDR';
+    var sub = isFx
+      ? (fmtFx(ev.fxSpent || 0, ev.currency) + ' · ' + (ev.txCount || 0) + ' transaksi')
+      : ((ev.txCount || 0) + ' transaksi' + (ev.budget > 0 ? ' · Target ' + short(ev.budget) : ''));
+    return '<div class="ev-banner" onclick="openEvDetail(\''+esc(ev.id)+'\')">'+
+      '<div class="ev-banner-ico">'+esc(ev.icon || '✈️')+'</div>'+
+      '<div class="ev-banner-mid"><b>'+esc(ev.name)+'</b><small>'+esc(sub)+'</small></div>'+
+      '<div class="ev-banner-amt"><b>'+mk(rp(ev.spent || 0))+'</b><small>'+(ev.budget > 0 ? Math.round(((ev.spent||0)/ev.budget)*100)+'% budget' : 'Aktif ›')+'</small></div>'+
+    '</div>';
+  }).join('');
+}
+function evCardHtml(ev){
+  var isDone = ev.status === 'SELESAI';
+  var isFx = ev.currency && ev.currency !== 'IDR';
+  var spent = Number(ev.spent) || 0;
+  var inc = Number(ev.income) || 0;
+  var net = spent - inc;
+  var bud = Number(ev.budget) || 0;
+  var pct = bud > 0 ? Math.min(100, Math.round((spent / bud) * 100)) : 0;
+  var over = bud > 0 && spent > bud;
+  var dateTxt = (ev.startDate || ev.endDate)
+    ? ((ev.startDate || '…') + ' → ' + (ev.endDate || '…'))
+    : (APP_LANG === 'en' ? 'No date limit' : 'Tanpa batas tanggal');
+  var fxLine = isFx ? (' · <b>' + esc(fmtFx(ev.fxSpent || 0, ev.currency)) + '</b>') : '';
+  return '<div class="ev-card'+(isDone?' done':'')+'" onclick="openEvDetail(\''+esc(ev.id)+'\')">'+
+    '<div class="ev-top">'+
+      '<div class="ev-ico">'+esc(ev.icon || '✈️')+'</div>'+
+      '<div class="ev-mid"><b>'+esc(ev.name)+'</b><small>'+esc(dateTxt)+' · '+(ev.txCount||0)+' tx</small></div>'+
+      '<span class="ev-badge'+(isDone?' done':'')+'">'+(isFx ? esc(ev.currency) : (isDone ? 'Selesai' : 'Aktif'))+'</span>'+
+    '</div>'+
+    '<div class="ev-nums">'+
+      '<span>Keluar: <b>'+mk(rp(spent))+'</b>'+fxLine+'</span>'+
+      (bud > 0 ? '<span>Target '+mk(rp(bud))+'</span>' : '')+
+    '</div>'+
+    (bud > 0 ? '<div class="ev-bar"><i class="'+(over?'over':'')+'" style="width:'+pct+'%"></i></div>' : '')+
+    '<div class="ev-foot">'+
+      '<span>Net cost: <b>'+mk(rp(net))+'</b>'+(inc>0?' (Masuk '+mk(rp(inc))+')':'')+'</span>'+
+      (bud > 0 ? '<span>'+(over ? 'Over ' + mk(rp(spent - bud)) : 'Sisa ' + mk(rp(bud - spent)))+'</span>' : '<span>Lihat detail ›</span>')+
+    '</div>'+
+  '</div>';
+}
+function renderEventsPage(){
+  if(!S || !$('evActiveList')) return;
+  var list = S.events || [];
+  var active = list.filter(function(e){ return e.status !== 'SELESAI'; });
+  var done = list.filter(function(e){ return e.status === 'SELESAI'; });
+  var totAct = active.reduce(function(a, e){ return a + (Number(e.spent) || 0); }, 0);
+  $('evHeroTot').textContent = mk(rp(totAct));
+  $('evActCnt').textContent = active.length;
+  $('evDoneCnt').textContent = done.length;
+  $('evActiveList').innerHTML = active.length
+    ? active.map(evCardHtml).join('')
+    : '<div class="card"><div class="empty" style="padding:24px 10px"><div style="font-size:28px;margin-bottom:8px">✈️</div><div style="margin-bottom:12px">'+(APP_LANG === 'en' ? 'No active events yet.<br>Create one for trips, weddings, or projects!' : 'Belum ada Event aktif.<br>Buat Event untuk Trip Liburan, Nikahan, atau Proyek!')+'</div><button type="button" class="add-bud-btn" style="padding:10px 18px;font-size:13.5px" onclick="openEvModal()">+ Buat Event</button></div></div>';
+  $('evDoneWrap').style.display = done.length ? '' : 'none';
+  $('evDoneList').innerHTML = done.map(evCardHtml).join('');
+}
+function renderFormEventBox(){
+  var box = $('fEventBox'), wrap = $('fEvents');
+  if(!box || !wrap || !S) return;
+  var active = (S.events || []).filter(function(e){ return e.status !== 'SELESAI'; });
+  if(!active.length){
+    box.style.display = 'none';
+    pickedEventId = '';
+    updateTxFxPreview('add');
+    return;
+  }
+  box.style.display = '';
+  if(pickedEventId && !active.some(function(e){ return e.id === pickedEventId; })) pickedEventId = '';
+  var chips = '<button type="button" class="wchip'+(!pickedEventId?' on':'')+'" onclick="setFormEvent(\'\')"><span>Tanpa Event</span></button>';
+  chips += active.map(function(ev){
+    return '<button type="button" class="wchip'+(pickedEventId===ev.id?' on':'')+'" onclick="setFormEvent(\''+esc(ev.id)+'\')"><span>'+esc(ev.icon||'✈️')+' '+esc(ev.name)+(ev.currency&&ev.currency!=='IDR'?' ('+esc(ev.currency)+')':'')+'</span></button>';
+  }).join('');
+  wrap.innerHTML = chips;
+  updateTxFxPreview('add');
+}
+function setFormEvent(id){
+  pickedEventId = id || '';
+  var ev = findEventById(pickedEventId);
+  pickedFxRate = (ev && ev.currency && ev.currency !== 'IDR') ? (Number(ev.rate) || 1) : 1;
+  renderFormEventBox();
+}
+function renderEditEventBox(){
+  var box = $('eEventBox'), wrap = $('eEvents');
+  if(!box || !wrap || !S) return;
+  var all = S.events || [];
+  if(!all.length){ box.style.display = 'none'; updateTxFxPreview('edit'); return; }
+  box.style.display = '';
+  var chips = '<button type="button" class="wchip'+(!eEventId?' on':'')+'" onclick="setEditEvent(\'\')"><span>Tanpa Event</span></button>';
+  chips += all.filter(function(e){ return e.status !== 'SELESAI' || e.id === eEventId; }).map(function(ev){
+    return '<button type="button" class="wchip'+(eEventId===ev.id?' on':'')+'" onclick="setEditEvent(\''+esc(ev.id)+'\')"><span>'+esc(ev.icon||'✈️')+' '+esc(ev.name)+'</span></button>';
+  }).join('');
+  wrap.innerHTML = chips;
+  updateTxFxPreview('edit');
+}
+function setEditEvent(id){
+  eEventId = id || '';
+  var ev = findEventById(eEventId);
+  eFxRate = (ev && ev.currency && ev.currency !== 'IDR') ? (Number(ev.rate) || 1) : 1;
+  renderEditEventBox();
+}
+function updateTxFxPreview(mode){
+  var isEdit = mode === 'edit';
+  var evId = isEdit ? eEventId : pickedEventId;
+  var rate = isEdit ? eFxRate : pickedFxRate;
+  var ev = findEventById(evId);
+  var isFx = !!(ev && ev.currency && ev.currency !== 'IDR');
+  var box = $(isEdit ? 'eFxBox' : 'fFxBox');
+  var lbl = $(isEdit ? 'eAmtLbl' : 'lblAmtTap');
+  if(!box || !lbl) return;
+  if(!isFx){
+    box.classList.remove('on');
+    lbl.textContent = isEdit ? 'Jumlah (Rp) · ketuk untuk mengubah' : tr('amtTap');
+    return;
+  }
+  var m = curMeta(ev.currency);
+  lbl.textContent = 'Jumlah (' + ev.currency + ' ' + m.s + ') · ketuk untuk mengisi';
+  var raw = Number($(isEdit ? 'eAmt' : 'fAmt').value.replace(/\D/g,'')) || 0;
+  var idr = Math.round(raw * (rate || ev.rate || 1));
+  $(isEdit ? 'eFxIdr' : 'fFxIdr').textContent = rp(idr);
+  $(isEdit ? 'eFxRateBtn' : 'fFxRateBtn').textContent = 'Kurs: 1 ' + ev.currency + ' = Rp ' + num(rate || ev.rate || 1);
+  box.classList.add('on');
+}
+function editTxFxRate(mode){
+  var isEdit = mode === 'edit';
+  var ev = findEventById(isEdit ? eEventId : pickedEventId);
+  if(!ev) return;
+  var curRate = isEdit ? eFxRate : pickedFxRate;
+  var val = prompt('Masukkan kurs 1 ' + ev.currency + ' ke Rupiah (Rp):', String(curRate || ev.rate || 1));
+  if(val === null) return;
+  var r = Number(String(val).replace(',', '.'));
+  if(!isFinite(r) || r <= 0){ toast('Kurs tidak valid'); return; }
+  if(isEdit) eFxRate = r; else pickedFxRate = r;
+  updateTxFxPreview(mode);
+}
+
+/* Modal Buat / Edit Event */
+function openEvModal(evId){
+  evEditId = evId || '';
+  var ev = findEventById(evEditId);
+  $('evModalTitle').textContent = ev ? '✏️ Edit Event' : '✈️ Buat Event Baru';
+  evPickedIcon = ev ? (ev.icon || '✈️') : '✈️';
+  evPickedCur = ev ? (ev.currency || 'IDR') : 'IDR';
+  $('evNameIn').value = ev ? ev.name : '';
+  $('evRateIn').value = ev && ev.rate ? ev.rate : curMeta(evPickedCur).r;
+  $('evBudIn').value = ev && ev.budget ? ev.budget : '';
+  $('evStartIn').value = ev && ev.startDate ? ev.startDate : (S ? S.today : '');
+  $('evEndIn').value = ev && ev.endDate ? ev.endDate : '';
+  $('evExclIn').checked = ev ? !!ev.excludeReport : false;
+  renderEvModalPickers();
+  $('evBg').classList.add('open');
+  $('evModal').classList.add('open');
+}
+function closeEvModal(){
+  $('evBg').classList.remove('open');
+  $('evModal').classList.remove('open');
+}
+function renderEvModalPickers(){
+  $('evEmojis').innerHTML = EV_EMOJIS.map(function(em){
+    return '<button type="button" class="wchip'+(evPickedIcon===em?' on':'')+'" onclick="evPickedIcon=\''+em+'\';renderEvModalPickers()"><span>'+em+'</span></button>';
+  }).join('');
+  $('evCurGrid').innerHTML = EV_CURRENCIES.map(function(m){
+    return '<button type="button" class="'+(evPickedCur===m.c?'on':'')+'" onclick="pickEvCurrency(\''+m.c+'\')">'+m.c+'</button>';
+  }).join('');
+  $('evRateWrap').style.display = evPickedCur === 'IDR' ? 'none' : '';
+}
+function pickEvCurrency(c){
+  evPickedCur = c;
+  if(c !== 'IDR') $('evRateIn').value = curMeta(c).r;
+  renderEvModalPickers();
+}
+function saveEventForm(){
+  var name = $('evNameIn').value.trim();
+  if(!name){ toast('Nama Event tidak boleh kosong'); return; }
+  var rate = evPickedCur === 'IDR' ? 1 : (Number($('evRateIn').value) || curMeta(evPickedCur).r);
+  if(rate <= 0){ toast('Kurs harus lebih dari 0'); return; }
+  var payload = {
+    id: evEditId || '',
+    name: name,
+    icon: evPickedIcon,
+    currency: evPickedCur,
+    rate: rate,
+    budget: Math.max(0, Math.round(Number($('evBudIn').value) || 0)),
+    startDate: $('evStartIn').value || '',
+    endDate: $('evEndIn').value || '',
+    excludeReport: $('evExclIn').checked ? 'YA' : 'TIDAK'
+  };
+  var btn = $('evSaveBtn'); btn.disabled = true; btn.textContent = 'Menyimpan…';
+  setSyncing(true, 'Menyimpan Event…');
+  call('saveEvent', payload, S.ym)
+    .then(function(d){
+      commitData(d);
+      closeEvModal();
+      setBudgetTab('event');
+      if($('evDetailModal').classList.contains('open') && evDetailId) openEvDetail(evDetailId);
+      setSyncing(false);
+      toast('Event tersimpan ✅');
+    })
+    .catch(function(e){ setSyncing(false); toast('Gagal: ' + (e.message || e)); })
+    .then(function(){ btn.disabled = false; btn.textContent = 'Simpan Event'; });
+}
+
+/* Modal Detail Event */
+function openEvDetail(evId){
+  var ev = findEventById(evId);
+  if(!ev) return;
+  evDetailId = evId;
+  var isDone = ev.status === 'SELESAI';
+  var isFx = ev.currency && ev.currency !== 'IDR';
+  var spent = Number(ev.spent) || 0, inc = Number(ev.income) || 0, net = spent - inc;
+  $('evDetTitle').textContent = (ev.icon || '✈️') + ' ' + ev.name;
+  var fxHtml = isFx ? '<small style="color:var(--primary);font-weight:700">'+esc(fmtFx(ev.fxSpent||0, ev.currency))+' (kurs Rp '+num(ev.rate)+')</small>' : '';
+  $('evDetBody').innerHTML =
+    '<div class="ev-sum-grid">'+
+      '<div class="ev-sum-box"><small>Total Pengeluaran</small><b>'+mk(rp(spent))+'</b>'+fxHtml+'</div>'+
+      '<div class="ev-sum-box"><small>Biaya Bersih (Net)</small><b>'+mk(rp(net))+'</b>'+(inc>0?'<small>Masuk: '+mk(rp(inc))+'</small>':'')+'</div>'+
+    '</div>'+
+    '<div class="ev-act-row" style="margin-bottom:12px">'+
+      '<button type="button" class="pri" onclick="addTxToEvent(\''+esc(ev.id)+'\')">+ Catat Transaksi</button>'+
+      '<button type="button" onclick="openEvModal(\''+esc(ev.id)+'\')">✏️ Edit</button>'+
+    '</div>'+
+    '<div class="ev-act-row" style="margin-bottom:14px">'+
+      '<button type="button" onclick="toggleEvStatus(\''+esc(ev.id)+'\',\''+(isDone?'AKTIF':'SELESAI')+'\')">'+(isDone?'🔄 Aktifkan Lagi':'✅ Tandai Selesai')+'</button>'+
+      '<button type="button" class="dng" onclick="confirmDeleteEvent(\''+esc(ev.id)+'\')">🗑 Hapus Event</button>'+
+    '</div>'+
+    '<div id="evDetTxList"><div class="empty" style="padding:18px">Memuat transaksi event…</div></div>';
+  $('evDetailBg').classList.add('open');
+  $('evDetailModal').classList.add('open');
+
+  call('getEventTransactions', evId)
+    .then(function(list){
+      evDetailTxs = list || [];
+      var box = $('evDetTxList');
+      if(!box) return;
+      if(!evDetailTxs.length){
+        box.innerHTML = '<div class="empty" style="padding:18px">Belum ada transaksi di event ini.</div>';
+        return;
+      }
+      box.innerHTML = evDetailTxs.map(function(t){
+        var isIn = t.type === 'Pemasukan', isTrf = t.type === 'Transfer';
+        var cls = isTrf ? 'trf' : (isIn ? 'in' : 'out');
+        var sign = isTrf ? '➡ ' : (isIn ? '+' : '-');
+        var fxSub = (t.currency && t.currency !== 'IDR' && Number(t.fxAmount) > 0) ? (' · ' + fmtFx(t.fxAmount, t.currency)) : '';
+        return '<div class="drow" onclick="openEdit(\''+esc(t.id)+'\')">'+
+          '<div class="ico">'+iconOf(t.cat, t.type, t.sub)+'</div>'+
+          '<div class="mid"><b>'+esc(trCat(t.cat))+(t.sub?' · '+esc(trCat(t.sub)):'')+'</b><small>'+esc(t.date)+' · '+esc(walletLbl(t))+esc(fxSub)+(t.note?' · '+esc(t.note):'')+'</small></div>'+
+          '<div class="amt '+cls+'">'+sign+mk(rp(t.amount))+'</div></div>';
+      }).join('');
+    })
+    .catch(function(){
+      if($('evDetTxList')) $('evDetTxList').innerHTML = '<div class="empty" style="padding:18px">Gagal memuat transaksi event.</div>';
+    });
+}
+function closeEvDetail(){
+  $('evDetailBg').classList.remove('open');
+  $('evDetailModal').classList.remove('open');
+}
+function addTxToEvent(evId){
+  closeEvDetail();
+  setFormEvent(evId);
+  go('add');
+}
+function toggleEvStatus(evId, nextStatus){
+  setSyncing(true, 'Memperbarui…');
+  call('toggleEventStatus', evId, nextStatus, S.ym)
+    .then(function(d){
+      commitData(d);
+      setSyncing(false);
+      openEvDetail(evId);
+      toast(nextStatus === 'SELESAI' ? 'Event ditandai selesai ✅' : 'Event diaktifkan kembali 🔄');
+    })
+    .catch(function(e){ setSyncing(false); toast('Gagal: ' + (e.message || e)); });
+}
+function confirmDeleteEvent(evId){
+  var ev = findEventById(evId);
+  openConfirmSheet(
+    'Hapus Event "' + (ev ? ev.name : '') + '"?',
+    'Event akan dihapus, tetapi transaksi yang sudah tercatat tetap aman di Riwayat.',
+    'Ya, Hapus',
+    function(){
+      setSyncing(true, 'Menghapus Event…');
+      call('deleteEvent', evId, S.ym)
+        .then(function(d){
+          commitData(d);
+          closeEvDetail();
+          setSyncing(false);
+          toast('Event dihapus 🗑');
+        })
+        .catch(function(e){ setSyncing(false); toast('Gagal: ' + (e.message || e)); });
+    }
+  );
+}
+
 /* Inisialisasi Tema, Bahasa, Ikon PNG iOS & Muat Data */
 applyTheme(APP_THEME);
 applyLang();
