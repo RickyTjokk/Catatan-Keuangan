@@ -880,10 +880,18 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
 .fx-live-btn{min-height:42px;padding:0 12px;border-radius:12px;border:1px solid rgba(79,70,229,.3);background:var(--primary-soft);color:var(--primary);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
 .lap-act-bar{display:flex;gap:8px;margin-bottom:12px}
 .lap-act-bar button{flex:1;min-height:40px;border-radius:13px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:var(--shadow)}
-.crow-ord{display:inline-flex;align-items:center;gap:4px;margin-right:6px;flex:none}
-.crow-ord span{width:28px;height:28px;border-radius:8px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--text)}
-.crow-ord span.dis{opacity:.28;pointer-events:none}
-.ev-cur-grid button{display:flex;align-items:center;justify-content:center;gap:4px;padding:0 4px}
+.drag-handle{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);cursor:grab;touch-action:none;flex:none;border-radius:8px;margin-right:4px}
+.drag-handle:active{cursor:grabbing;background:var(--primary-soft);color:var(--primary)}
+.cgrp.dragging,.crow.sub.dragging{opacity:.95;background:var(--card);box-shadow:0 10px 26px rgba(79,70,229,.22);outline:1.5px solid var(--primary);border-radius:14px;position:relative;z-index:5}
+.cgrp.drag-over,.crow.sub.drag-over{box-shadow:inset 0 2px 0 var(--primary)}
+.ev-ico-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:6px}
+.ev-ico-btn{height:44px;width:100%;border-radius:13px;border:1.5px solid var(--line);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:21px;line-height:1;padding:0;cursor:pointer;transition:all .15s}
+.ev-ico-btn.on{background:var(--primary-soft);border-color:var(--primary);box-shadow:0 0 0 2px rgba(79,70,229,.18)}
+.ev-cur-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:6px}
+.ev-cur-grid button{min-height:52px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--text);font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 2px;line-height:1;cursor:pointer;transition:all .15s}
+.ev-cur-grid button .cur-f{font-size:18px;line-height:1;display:block}
+.ev-cur-grid button .cur-c{font-size:11px;font-weight:800;letter-spacing:.2px;line-height:1;display:block}
+.ev-cur-grid button.on{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 12px rgba(79,70,229,.25)}
 </style>
 </head>
 <body>
@@ -1556,7 +1564,7 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
   <div class="card" style="margin-bottom:12px">
     <div class="field">
       <span id="evIcoLbl">Pilih Ikon</span>
-      <div class="wchips" id="evEmojis"></div>
+      <div class="ev-ico-grid" id="evEmojis"></div>
     </div>
     <label class="field">
       <span id="evNameLbl">Nama Event</span>
@@ -3738,8 +3746,9 @@ function renderCatModal(){
     list.push({n:eCat, i:'📦', sub:[]});
   }
   var PROTECTED_TRF = ['Antar Dompet', 'Dana Darurat', 'Reksadana', 'Saham'];
+  var GRIP_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>';
   var html = [];
-  list.forEach(function(c, cIdx){
+  list.forEach(function(c){
     var subs = c.sub || [];
     var catMatch = !q || c.n.toLowerCase().indexOf(q) >= 0 || trCat(c.n).toLowerCase().indexOf(q) >= 0;
     var matchedSubs = q ? subs.filter(function(s){
@@ -3750,53 +3759,116 @@ function renderCatModal(){
     var showSubs = catMatch ? subs : matchedSubs;
     var isParentPicked = (activeType === cmType && activeCat === c.n && !activeSub);
     var canDelMain = cmManageMode && !(cmType === 'Transfer' && PROTECTED_TRF.indexOf(c.n) >= 0);
-    var ordBtns = (cmManageMode && !q)
-      ? '<span class="crow-ord">'+
-          '<span class="'+(cIdx===0?'dis':'')+'" data-c="'+esc(c.n)+'" onclick="event.stopPropagation();moveCategoryUi(this.dataset.c,\'up\')" title="Naik">↑</span>'+
-          '<span class="'+(cIdx===list.length-1?'dis':'')+'" data-c="'+esc(c.n)+'" onclick="event.stopPropagation();moveCategoryUi(this.dataset.c,\'down\')" title="Turun">↓</span>'+
-        '</span>'
+    var dragMainBtn = (cmManageMode && !q)
+      ? '<span class="drag-handle" onpointerdown="startCatDrag(event,\'cat\')" onclick="event.stopPropagation()" title="Seret untuk ubah urutan">'+GRIP_SVG+'</span>'
       : '';
     var delMainBtn = canDelMain
       ? '<span class="crow-del" data-c="'+esc(c.n)+'" data-s="" onclick="event.stopPropagation();deleteCategoryUi(this.dataset.c, this.dataset.s)">🗑</span>'
       : '';
     var rowHtml = '<button type="button" class="crow parent'+(showSubs.length?' has-sub':'')+(isParentPicked?' picked':'')+'" data-c="'+esc(c.n)+'" data-s="" onclick="selectCatItem(this.dataset.c, this.dataset.s)">'+
+      dragMainBtn+
       '<div class="cico">'+c.i+'</div>'+
       '<div class="cname">'+esc(trCat(c.n))+'</div>'+
       (isParentPicked && !cmManageMode ? '<span class="chk">✓</span>' : '')+
-      ordBtns+
       delMainBtn+
     '</button>';
     showSubs.forEach(function(s){
       var sn = subName(s), se = subEmoji(s) || c.i;
       var isSubPicked = (activeType === cmType && activeCat === c.n && activeSub === sn);
+      var dragSubBtn = (cmManageMode && !q)
+        ? '<span class="drag-handle" onpointerdown="startCatDrag(event,\'sub\')" onclick="event.stopPropagation()" title="Seret untuk ubah urutan">'+GRIP_SVG+'</span>'
+        : '';
       var delSubBtn = cmManageMode
         ? '<span class="crow-del" data-c="'+esc(c.n)+'" data-s="'+esc(sn)+'" onclick="event.stopPropagation();deleteCategoryUi(this.dataset.c, this.dataset.s)">🗑</span>'
         : '';
       rowHtml += '<button type="button" class="crow sub'+(isSubPicked?' picked':'')+'" data-c="'+esc(c.n)+'" data-s="'+esc(sn)+'" onclick="selectCatItem(this.dataset.c, this.dataset.s)">'+
         '<span class="branch"></span>'+
+        dragSubBtn+
         '<div class="cico">'+se+'</div>'+
         '<div class="cname">'+esc(trCat(sn))+'</div>'+
         (isSubPicked && !cmManageMode ? '<span class="chk">✓</span>' : '')+
         delSubBtn+
       '</button>';
     });
-    html.push('<div class="cgrp">'+rowHtml+'</div>');
+    html.push('<div class="cgrp" data-cat="'+esc(c.n)+'">'+rowHtml+'</div>');
   });
   $('cmBody').innerHTML = html.length ? html.join('') : '<div class="empty">'+(APP_LANG === 'en' ? 'Category not found 🔍' : 'Kategori tidak ditemukan 🔍')+'</div>';
 }
-function moveCategoryUi(cat, dir){
+function startCatDrag(ev, kind){
+  ev.preventDefault();
+  ev.stopPropagation();
+  var handle = ev.currentTarget;
+  var item = kind === 'cat' ? handle.closest('.cgrp') : handle.closest('.crow.sub');
+  var container = kind === 'cat' ? $('cmBody') : (item && item.parentElement);
+  if(!item || !container) return;
+  var selector = kind === 'cat' ? ':scope > .cgrp' : ':scope > .crow.sub';
+  var siblings = Array.prototype.slice.call(container.querySelectorAll(selector));
+  if(siblings.length < 2) return;
+
+  item.classList.add('dragging');
+  var moved = false;
+
+  function onMove(e){
+    e.preventDefault();
+    var y = e.clientY;
+    var list = Array.prototype.slice.call(container.querySelectorAll(selector));
+    for(var i = 0; i < list.length; i++){
+      var el = list[i];
+      if(el === item) continue;
+      var rect = el.getBoundingClientRect();
+      var mid = rect.top + rect.height / 2;
+      if(y < mid && el.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_FOLLOWING){
+        container.insertBefore(item, el);
+        moved = true;
+        break;
+      }
+      if(y > mid && el.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_PRECEDING){
+        container.insertBefore(item, el.nextSibling);
+        moved = true;
+        break;
+      }
+    }
+  }
+  function onUp(){
+    item.classList.remove('dragging');
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onUp);
+    if(!moved) return;
+    persistCategoryOrderFromDom();
+  }
+  window.addEventListener('pointermove', onMove, { passive: false });
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
+}
+function persistCategoryOrderFromDom(){
   var k = typeKey(cmType);
-  var arr = (S && S.kategori && S.kategori[k]) || [];
-  var idx = -1;
-  for(var i = 0; i < arr.length; i++){ if(arr[i].n === cat){ idx = i; break; } }
-  var swapIdx = dir === 'up' ? idx - 1 : idx + 1;
-  if(idx < 0 || swapIdx < 0 || swapIdx >= arr.length) return;
-  var tmp = arr[idx]; arr[idx] = arr[swapIdx]; arr[swapIdx] = tmp;
-  renderCatModal();
-  setSyncing(true, 'Menyimpan urutan…');
-  call('reorderCategory', cmType, cat, dir, S.ym)
-    .then(function(d){ commitData(d); renderCatModal(); setSyncing(false); })
-    .catch(function(e){ setSyncing(false); toast('Gagal: ' + (e.message || e)); });
+  var curList = (S && S.kategori && S.kategori[k]) || [];
+  var byName = {};
+  curList.forEach(function(c){ byName[c.n] = c; });
+  var newList = [];
+  var payload = [];
+  Array.prototype.slice.call($('cmBody').querySelectorAll(':scope > .cgrp')).forEach(function(grp){
+    var cName = grp.dataset.cat;
+    var orig = byName[cName];
+    if(!orig) return;
+    var subByName = {};
+    (orig.sub || []).forEach(function(s){ subByName[subName(s)] = s; });
+    var newSubs = [], subNames = [];
+    Array.prototype.slice.call(grp.querySelectorAll(':scope > .crow.sub')).forEach(function(sr){
+      var sn = sr.dataset.s;
+      if(subByName[sn]){ newSubs.push(subByName[sn]); subNames.push(sn); }
+    });
+    newList.push({ n: orig.n, i: orig.i, sub: newSubs });
+    payload.push({ n: orig.n, subs: subNames });
+  });
+  if(newList.length){
+    S.kategori[k] = newList;
+    setSyncing(true, 'Menyimpan urutan…');
+    call('saveCategoryOrder', cmType, payload, S.ym)
+      .then(function(d){ commitData(d); renderCatModal(); setSyncing(false); toast('Urutan tersimpan ✅'); })
+      .catch(function(e){ setSyncing(false); toast('Gagal: ' + (e.message || e)); });
+  }
 }
 function selectCatItem(cat, sub){
   if(cmManageMode) return;
@@ -5085,10 +5157,10 @@ function closeEvModal(){
 }
 function renderEvModalPickers(){
   $('evEmojis').innerHTML = EV_EMOJIS.map(function(em){
-    return '<button type="button" class="wchip'+(evPickedIcon===em?' on':'')+'" onclick="evPickedIcon=\''+em+'\';renderEvModalPickers()"><span>'+em+'</span></button>';
+    return '<button type="button" class="ev-ico-btn'+(evPickedIcon===em?' on':'')+'" onclick="evPickedIcon=\''+em+'\';renderEvModalPickers()">'+em+'</button>';
   }).join('');
   $('evCurGrid').innerHTML = EV_CURRENCIES.map(function(m){
-    return '<button type="button" class="'+(evPickedCur===m.c?'on':'')+'" onclick="pickEvCurrency(\''+m.c+'\')"><span>'+(m.f||'')+'</span><span>'+m.c+'</span></button>';
+    return '<button type="button" class="'+(evPickedCur===m.c?'on':'')+'" onclick="pickEvCurrency(\''+m.c+'\')"><span class="cur-f">'+(m.f||'')+'</span><span class="cur-c">'+m.c+'</span></button>';
   }).join('');
   $('evRateWrap').style.display = evPickedCur === 'IDR' ? 'none' : '';
 }

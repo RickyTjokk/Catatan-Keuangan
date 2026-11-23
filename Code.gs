@@ -993,6 +993,79 @@ function reorderCategory(type, cat, dir, ym) {
   }
 }
 
+function saveCategoryOrder(type, orderedTree, ym) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var env = ensureSheets_();
+    var sh = env.katSh;
+    var last = sh.getLastRow();
+    if (last <= 1 || !Array.isArray(orderedTree) || !orderedTree.length) return getData(ym || null);
+    var rows = sh.getRange(2, 1, last - 1, 6).getValues();
+    var tLow = String(type || 'Pengeluaran').trim().toLowerCase();
+
+    var otherRows = [];
+    var catRowsMap = {};
+    rows.forEach(function(r) {
+      var rt = String(r[0] || '').trim().toLowerCase();
+      var rc = String(r[1] || '').trim();
+      var rcLow = rc.toLowerCase();
+      var ra = String(r[5] || 'YA').trim().toUpperCase();
+      if (rt === tLow && rc && ra !== 'TIDAK') {
+        if (!catRowsMap[rcLow]) catRowsMap[rcLow] = [];
+        catRowsMap[rcLow].push(r);
+      } else {
+        otherRows.push(r);
+      }
+    });
+
+    var rebuilt = [];
+    var usedCats = {};
+    orderedTree.forEach(function(item) {
+      var cLow = String((item && item.n) || '').trim().toLowerCase();
+      if (!cLow || !catRowsMap[cLow] || usedCats[cLow]) return;
+      usedCats[cLow] = true;
+      var group = catRowsMap[cLow];
+      var subOrder = Array.isArray(item.subs) ? item.subs.map(function(s) { return String(s || '').trim().toLowerCase(); }) : [];
+      if (subOrder.length) {
+        var subMap = {}, noSubRows = [];
+        group.forEach(function(r) {
+          var sLow = String(r[3] || '').trim().toLowerCase();
+          if (!sLow) { noSubRows.push(r); return; }
+          if (!subMap[sLow]) subMap[sLow] = [];
+          subMap[sLow].push(r);
+        });
+        noSubRows.forEach(function(r) { rebuilt.push(r); });
+        var usedSubs = {};
+        subOrder.forEach(function(sl) {
+          if (subMap[sl] && !usedSubs[sl]) {
+            usedSubs[sl] = true;
+            subMap[sl].forEach(function(r) { rebuilt.push(r); });
+          }
+        });
+        Object.keys(subMap).forEach(function(sl) {
+          if (!usedSubs[sl]) subMap[sl].forEach(function(r) { rebuilt.push(r); });
+        });
+      } else {
+        group.forEach(function(r) { rebuilt.push(r); });
+      }
+    });
+
+    Object.keys(catRowsMap).forEach(function(cLow) {
+      if (!usedCats[cLow]) catRowsMap[cLow].forEach(function(r) { rebuilt.push(r); });
+    });
+    otherRows.forEach(function(r) { rebuilt.push(r); });
+
+    if (rebuilt.length) {
+      sh.getRange(2, 1, rebuilt.length, 6).setValues(rebuilt);
+    }
+    invalidateDataCache_();
+    return getData(ym || null);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function deleteCategory(type, cat, sub, ym) {
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
@@ -1989,6 +2062,7 @@ var API_MAP_ = {
   deleteWallet: deleteWallet,
   addCategory: addCategory,
   reorderCategory: reorderCategory,
+  saveCategoryOrder: saveCategoryOrder,
   deleteCategory: deleteCategory,
   addTransaction: addTransaction,
   addMultipleTransactions: addMultipleTransactions,
