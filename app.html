@@ -5860,17 +5860,66 @@ window.addEventListener('offline', function(){ renderOfflineBar(); });
   }, { passive: true });
 })();
 
-/* Inisialisasi Tema, Bahasa, Ikon PNG iOS & Muat Data */
-applyTheme(APP_THEME);
-applyLang();
-renderOfflineBar();
-syncOfflineQueue(false);
+/* ===== #3 DUPLIKAT TRANSAKSI KE HARI INI ===== */
+function duplicateEditTx(){
+  var tp = eType || 'Pengeluaran';
+  var rawAmt = $('eAmt').value;
+  var note = $('eNote').value || '';
+  var cat = eCat, sub = eSub, w = eWallet, wTo = eWalletTo, evId = eEventId, rate = eFxRate;
+  closeEdit();
+  setType(tp);
+  pickedCat = cat;
+  pickedSub = sub;
+  pickedWallet = w;
+  pickedWalletTo = wTo;
+  pickedEventId = evId || '';
+  pickedFxRate = rate || 1;
+  $('fAmt').value = rawAmt;
+  $('fNote').value = note;
+  $('fDate').value = (S && S.today) || ymd(new Date());
+  renderForm();
+  go('add');
+  toast(APP_LANG === 'en' ? 'Duplicated! Tap Save to record 📋' : 'Diduplikat! Ketuk Simpan untuk mencatat 📋');
+}
 
-load();
-</script>
-</body>
-</html>
-urn '<div class="trend-box">'+
+/* ===== #6 TREN 3 BULAN (LAPORAN) ===== */
+var lapSubTab = 'monthly';
+function setLapTab(tab){
+  lapSubTab = tab === 'trend3' ? 'trend3' : 'monthly';
+  var isT = lapSubTab === 'trend3';
+  if($('segLapMonBtn')) $('segLapMonBtn').classList.toggle('on', !isT);
+  if($('segLapTrdBtn')) $('segLapTrdBtn').classList.toggle('on', isT);
+  if($('lapTabMonthly')) $('lapTabMonthly').style.display = isT ? 'none' : '';
+  if($('lapTabTrend3')) $('lapTabTrend3').style.display = isT ? '' : 'none';
+  if(isT) renderTrend3();
+}
+function renderTrend3(){
+  if(!S || !$('trend3ChartBox')) return;
+  var list = S.trend3 || [];
+  if(!list.length){
+    $('trend3ChartBox').innerHTML = '<div class="empty" style="padding:16px">Belum ada data tren 3 bulan</div>';
+    $('trend3CardsBox').innerHTML = '';
+    return;
+  }
+  var maxVal = Math.max(1, list.reduce(function(m, x){ return Math.max(m, x.income || 0, x.expense || 0); }, 0));
+  var W = 320, H = 165, padB = 26, padT = 16, barH = H - padB - padT;
+  var bars = list.map(function(it, idx){
+    var cx = 56 + idx * 104;
+    var hIn = Math.round(((it.income || 0) / maxVal) * barH);
+    var hOut = Math.round(((it.expense || 0) / maxVal) * barH);
+    var mLbl = BLN[+it.ym.slice(5,7) - 1].slice(0,3) + ' ' + it.ym.slice(2,4);
+    return '<rect x="'+(cx-22)+'" y="'+(padT+barH-hIn)+'" width="18" height="'+hIn+'" rx="5" fill="#10b981"/>'+
+      '<rect x="'+(cx+4)+'" y="'+(padT+barH-hOut)+'" width="18" height="'+hOut+'" rx="5" fill="#ef4444"/>'+
+      '<text x="'+cx+'" y="'+(H-7)+'" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor">'+esc(mLbl)+'</text>';
+  }).join('');
+  $('trend3ChartBox').innerHTML =
+    '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;color:var(--muted)">'+bars+'</svg>'+
+    '<div class="legend"><span><s style="background:#10b981"></s>'+(APP_LANG==='en'?'Income':'Pemasukan')+'</span><span><s style="background:#ef4444"></s>'+(APP_LANG==='en'?'Expense':'Pengeluaran')+'</span></div>';
+
+  $('trend3CardsBox').innerHTML = '<div class="trend-cards">' + list.map(function(it){
+    var mLbl = BLN[+it.ym.slice(5,7) - 1].slice(0,3);
+    var clr = it.saving >= 0 ? 'var(--green)' : 'var(--red)';
+    return '<div class="trend-box">'+
       '<small>'+esc(mLbl)+'</small>'+
       '<b style="color:'+clr+'">'+mk((it.saving>=0?'+':'-')+short(Math.abs(it.saving)))+'</b>'+
       '<span style="color:var(--muted)">Rate: '+it.rate+'%</span>'+
