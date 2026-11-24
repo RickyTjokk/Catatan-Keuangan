@@ -1121,6 +1121,165 @@ nav button.fab{margin-top:0;width:54px;height:54px;border:0}
 .sw .slid::before{content:'';position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:transform .2s}
 .sw input:checked+.slid{background:var(--primary)}
 .sw input:checked+.slid::before{transform:translateX(18px)}
+
+/* ===== FLUID & BOUNCY UI/UX UPGRADE (PAKET 1, 2, 3) ===== */
+:root{--spring:cubic-bezier(.34,1.56,.64,1);--ease-out:cubic-bezier(.22,1.12,.36,1)}
+
+/* 1. Tabular Numbers untuk semua angka keuangan */
+.hero .big,.hero .chip b,.drow .amt,.wrow .bal b,.home-wrow .wbal,.bal-strip b,.dtot,
+.sbox b,.bd-top .bd-rem b,.bd-metric b,.cgrp-head .ctot b,#wTot,#bRemain,#bTot,#bSpent,#portTot{
+  font-variant-numeric:tabular-nums;
+}
+
+/* 2. Sliding Pill Indicator di Bottom Navbar + Bouncy Icon Pop */
+nav .in{position:relative}
+#navPill{
+  position:absolute;top:0;left:0;height:48px;border-radius:18px;
+  background:rgba(79,70,229,.15);border:1px solid rgba(79,70,229,.18);
+  transition:transform .42s var(--spring),width .32s var(--spring),opacity .2s;
+  pointer-events:none;z-index:0;opacity:0;
+}
+#navPill.ready{opacity:1}
+nav button{position:relative;z-index:1;transition:color .2s,transform .22s var(--spring)}
+nav button:not(.fab):active{transform:scale(.9)}
+nav button.on:not(.fab){background:transparent !important}
+nav button.on:not(.fab) svg{animation:navPop .42s var(--spring)}
+@keyframes navPop{0%{transform:scale(.82) translateY(2px)}55%{transform:scale(1.16) translateY(-2px)}100%{transform:scale(1) translateY(0)}}
+nav button.fab{transition:transform .38s var(--spring),box-shadow .25s}
+nav button.fab:active{transform:scale(.88)}
+nav button.fab svg{transition:transform .38s var(--spring)}
+.fab-opt{transition:.3s var(--spring)}
+
+/* 3. Directional View Transitions (Bouncy) */
+.view.on{animation:viewFade .28s var(--ease-out)}
+.view.on.dir-r{animation:viewFromRight .34s var(--ease-out)}
+.view.on.dir-l{animation:viewFromLeft .34s var(--ease-out)}
+.view.on.dir-up{animation:viewPushUp .32s var(--ease-out)}
+@keyframes viewFade{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:none}}
+@keyframes viewFromRight{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes viewFromLeft{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+@keyframes viewPushUp{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+
+/* 4. Animasi Ganti Bulan & Tap-to-Today */
+#mLabel{cursor:pointer;display:inline-block;transition:transform .2s var(--spring),opacity .18s}
+#mLabel:active{transform:scale(.92)}
+#mLabel.slide-l{animation:mSlideL .3s var(--spring)}
+#mLabel.slide-r{animation:mSlideR .3s var(--spring)}
+@keyframes mSlideL{0%{opacity:.25;transform:translateX(14px)}100%{opacity:1;transform:none}}
+@keyframes mSlideR{0%{opacity:.25;transform:translateX(-14px)}100%{opacity:1;transform:none}}
+
+/* 5. Smooth Grid Accordions (.port-body & .cgrp-rows) */
+.port-body,.cgrp-rows{
+  display:grid !important;grid-template-rows:0fr;opacity:0;
+  margin-top:0;padding-top:0;border-top:0 solid transparent;
+  transition:grid-template-rows .34s var(--ease-out),opacity .24s,margin-top .28s,padding-top .28s;
+}
+.port-body>.acc-in,.cgrp-rows>.acc-in{overflow:hidden;min-height:0}
+.port-card.open .port-body{grid-template-rows:1fr;opacity:1;margin-top:11px;padding-top:11px;border-top:1px solid var(--line)}
+.cgrp-card.open .cgrp-rows{grid-template-rows:1fr;opacity:1;margin-top:10px;padding-top:6px;border-top:1px solid var(--line)}
+.port-chev,.cgrp-chev{transition:transform .3s var(--spring)}
+
+/* 6. Native Bottom Sheets, Grabber Handle, Glass & Bouncy Spring */
+#edit,#pad,#catAddModal,#budAddModal,#budDetailModal,#walletAddModal,#walletOptModal,#confirmSheet,#profModal,#filterModal,#recModal,#evModal,#evDetailModal{
+  transition:transform .36s var(--ease-out) !important;
+  will-change:transform;
+}
+#recModal,#evModal,#evDetailModal{
+  background:var(--glass-strong);border-top:1px solid var(--glass-brd);
+  -webkit-backdrop-filter:blur(28px) saturate(1.8);backdrop-filter:blur(28px) saturate(1.8);
+  box-shadow:var(--glass-hi),0 -10px 40px rgba(0,0,0,.2);
+}
+#fabBg,#profBg,#editBg,#filterBg,#budDetailBg,#recBg,#evBg,#evDetailBg,#walletOptBg,#walletAddBg,#catAddBg,#budAddBg,#confirmBg{
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+}
+.sheet-grab{
+  width:38px;height:4.5px;border-radius:99px;background:var(--muted);opacity:.32;
+  margin:-4px auto 12px;flex:none;pointer-events:none;
+}
+
+/* 7. Sliding Segmented Controls */
+.seg,.period-seg,.view-seg{position:relative}
+.seg-pill{
+  position:absolute;top:4px;bottom:4px;left:0;border-radius:11px;
+  background:var(--primary);box-shadow:0 3px 10px rgba(79,70,229,.26);
+  transition:transform .36s var(--spring),width .3s var(--spring),background .22s;
+  pointer-events:none;z-index:0;
+}
+.seg.has-pill button,.period-seg.has-pill button,.view-seg.has-pill button{position:relative;z-index:1;background:transparent !important;box-shadow:none !important}
+.period-seg .seg-pill,.view-seg .seg-pill{top:2.5px;bottom:2.5px;border-radius:999px}
+.view-seg .seg-pill{top:2px;bottom:2px;border-radius:8px}
+.seg .seg-pill.tp-out{background:var(--red);box-shadow:0 3px 10px rgba(225,29,72,.28)}
+.seg .seg-pill.tp-in{background:var(--green);box-shadow:0 3px 10px rgba(22,163,74,.28)}
+.seg .seg-pill.tp-trf{background:var(--blue);box-shadow:0 3px 10px rgba(2,132,199,.28)}
+
+/* 8. Tactile Press pada baris interaktif */
+.drow,.wrow,.brow,.cat,.home-wrow,.rec-home-card{
+  transition:transform .16s var(--spring),opacity .14s,background .15s;
+}
+.drow:active,.wrow:active,.brow:active,.home-wrow:active,.rec-home-card:active{transform:scale(.978)}
+
+/* 9. Hero Card Premium Glass Depth */
+.hero{
+  position:relative;overflow:hidden;
+  border:1px solid rgba(255,255,255,.22);
+}
+.hero::before,.hero::after{
+  content:'';position:absolute;border-radius:50%;pointer-events:none;
+}
+.hero::before{
+  width:180px;height:180px;top:-70px;right:-45px;
+  background:radial-gradient(circle,rgba(255,255,255,.22),transparent 68%);
+}
+.hero::after{
+  width:150px;height:150px;bottom:-65px;left:-35px;
+  background:radial-gradient(circle,rgba(167,139,250,.28),transparent 70%);
+}
+.hero>*{position:relative;z-index:1}
+.hero .chip{border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+
+/* 10. Dark Mode Card Depth & Dynamic Sticky Header */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .card,
+  :root:not([data-theme="light"]) .sbox,
+  :root:not([data-theme="light"]) .dcard,
+  :root:not([data-theme="light"]) .cashbar,
+  :root:not([data-theme="light"]) .bal-strip,
+  :root:not([data-theme="light"]) .cgrp-card,
+  :root:not([data-theme="light"]) .rbar,
+  :root:not([data-theme="light"]) .rec-home-card{
+    border:1px solid rgba(255,255,255,.075);
+  }
+}
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .sbox,
+:root[data-theme="dark"] .dcard,
+:root[data-theme="dark"] .cashbar,
+:root[data-theme="dark"] .bal-strip,
+:root[data-theme="dark"] .cgrp-card,
+:root[data-theme="dark"] .rbar,
+:root[data-theme="dark"] .rec-home-card{
+  border:1px solid rgba(255,255,255,.075);
+}
+.top{border-bottom-color:transparent;transition:border-color .22s,box-shadow .22s}
+.top.scrolled{border-bottom-color:var(--glass-brd);box-shadow:0 4px 18px rgba(15,23,42,.08)}
+
+/* 11. Spring Toast & Reduced Motion */
+#toast{
+  background:rgba(20,24,42,.88);
+  -webkit-backdrop-filter:blur(14px) saturate(1.6);backdrop-filter:blur(14px) saturate(1.6);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 10px 28px rgba(0,0,0,.28);
+  transform:translateX(-50%) translateY(22px) scale(.92);
+  transition:transform .34s var(--spring),opacity .22s;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -1134,7 +1293,7 @@ nav button.fab{margin-top:0;width:54px;height:54px;border:0}
     <div class="top-right">
       <div class="month">
         <button onclick="shift(-1)" aria-label="Bulan sebelumnya">‹</button>
-        <span id="mLabel">-</span>
+        <span id="mLabel" onclick="jumpToCurrentMonth()" title="Ketuk untuk kembali ke bulan ini">-</span>
         <button onclick="shift(1)" aria-label="Bulan berikutnya">›</button>
       </div>
       <button type="button" id="profBtn" class="prof-btn" onclick="openProfileModal()" aria-label="Profil & Pengaturan">
@@ -1187,13 +1346,13 @@ nav button.fab{margin-top:0;width:54px;height:54px;border:0}
           <span class="port-chev">›</span>
         </div>
       </div>
-      <div class="port-body">
+      <div class="port-body"><div class="acc-in">
         <div class="pgrid" id="portGrid"></div>
         <div class="port-empty" id="portEmpty">
           Belum ada saldo Dana Darurat, Reksadana, atau Saham.<br>
           <button type="button" onclick="go('add');setType('Transfer')">+ Catat Setoran Aset</button>
         </div>
-      </div>
+      </div></div>
     </div>
     <div class="card" id="homeWalletsCard">
       <div class="chead">
@@ -1633,6 +1792,7 @@ nav button.fab{margin-top:0;width:54px;height:54px;border:0}
   <button type="button" class="bb-cancel" id="batchCancelBtn" onclick="exitSelectMode()">✕</button>
 </div>
 <nav><div class="in">
+  <span id="navPill" aria-hidden="true"></span>
   <button class="on" data-v="home" onclick="go('home')" aria-label="Ringkasan">
     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>
     <span class="nav-lbl" id="navLblHome">Beranda</span>
@@ -3225,13 +3385,37 @@ function fabSyncState(){
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
 })();
+var _curView = 'home';
+var _navOrder = { home: 0, wallet: 1, budget: 2, list: 3 };
+var _lastShiftDir = 0;
+
 function go(v){
   if(!fabIsLocked()) closeFabMenu();
   if(v !== 'list' && typeof exitSelectMode === 'function' && selectMode) exitSelectMode();
-  document.querySelectorAll('.view').forEach(function(x){x.classList.remove('on');});
-  $('v-'+v).classList.add('on');
+  var prev = _curView;
+  _curView = v;
+  var dirCls = '';
+  if(prev !== v){
+    if(v in _navOrder && prev in _navOrder){
+      dirCls = _navOrder[v] > _navOrder[prev] ? 'dir-r' : 'dir-l';
+    } else if(v === 'add' || v === 'cats' || v === 'lap'){
+      dirCls = 'dir-up';
+    }
+  }
+  document.querySelectorAll('.view').forEach(function(x){
+    x.classList.remove('on','dir-r','dir-l','dir-up');
+  });
+  var el = $('v-'+v);
+  if(el){
+    if(dirCls) el.classList.add(dirCls);
+    void el.offsetWidth;
+    el.classList.add('on');
+  }
   var navTarget = v === 'cats' ? 'home' : (v === 'lap' ? 'list' : v);
   document.querySelectorAll('nav button').forEach(function(b){b.classList.toggle('on', b.dataset.v===navTarget);});
+  if(typeof syncNavPill === 'function') syncNavPill();
+  if(typeof syncAllSegPills === 'function') setTimeout(syncAllSegPills, 20);
+  if(prev !== v && typeof haptic === 'function') haptic(8);
   if($('profBtn')) $('profBtn').style.display = 'flex';
   window.scrollTo(0,0);
 }
@@ -3250,10 +3434,18 @@ function openEventsFromProfile(){
   setBudgetTab('event');
 }
 function shift(d){
+  _lastShiftDir = d > 0 ? 1 : (d < 0 ? -1 : 0);
   var baseYm = (S && S.ym) ? S.ym : localYm();
   var y=+baseYm.slice(0,4), m=+baseYm.slice(5,7)-1+d;
   y += Math.floor(m/12); m = ((m%12)+12)%12;
   load(y+'-'+('0'+(m+1)).slice(-2));
+}
+function jumpToCurrentMonth(){
+  var cur = localYm();
+  if(S && S.ym === cur) return;
+  _lastShiftDir = (S && S.ym && S.ym < cur) ? 1 : -1;
+  if(typeof haptic === 'function') haptic(10);
+  load(cur);
 }
 function typeKey(tp){
   if(tp==='Pemasukan') return 'masuk';
@@ -3407,10 +3599,23 @@ function renderBudgetAlerts(){
 }
 
 function render(){
-  $('mLabel').textContent = BLN[+S.ym.slice(5,7)-1].slice(0,3) + ' ' + S.ym.slice(0,4);
-  $('hSaving').textContent = mk(rp(S.saving));
-  $('hIn').textContent = mk(rp(S.income));
-  $('hOut').textContent = mk(rp(S.expense));
+  var mEl = $('mLabel');
+  mEl.textContent = BLN[+S.ym.slice(5,7)-1].slice(0,3) + ' ' + S.ym.slice(0,4);
+  if(_lastShiftDir){
+    mEl.classList.remove('slide-l','slide-r');
+    void mEl.offsetWidth;
+    mEl.classList.add(_lastShiftDir > 0 ? 'slide-l' : 'slide-r');
+    _lastShiftDir = 0;
+  }
+  if(hide || typeof animateHeroNum !== 'function'){
+    $('hSaving').textContent = mk(rp(S.saving));
+    $('hIn').textContent = mk(rp(S.income));
+    $('hOut').textContent = mk(rp(S.expense));
+  } else {
+    animateHeroNum($('hSaving'), S.saving);
+    animateHeroNum($('hIn'), S.income);
+    animateHeroNum($('hOut'), S.expense);
+  }
   var vsTot = (S.income || 0) + (S.expense || 0);
   var inP = vsTot > 0 ? Math.round(S.income / vsTot * 100) : 0;
   var outP = vsTot > 0 ? 100 - inP : 0;
@@ -6231,7 +6436,7 @@ function renderDays(){
           '<div class="mid"><b>'+esc(trCat(gr.cat))+'</b><small>'+gr.items.length+(en?' transactions':' transaksi')+' · '+esc(trCat(gr.type))+'</small></div>' +
           '<div class="ctot"><b style="color:'+col+'">'+sign+mk(rp(gr.total))+'</b><small><span class="cgrp-chev">▾</span></small></div>' +
         '</div>' +
-        '<div class="cgrp-rows">'+rowsHtml+'</div>' +
+        '<div class="cgrp-rows"><div class="acc-in">'+rowsHtml+'</div></div>' +
       '</div>';
     }).join('');
     return;
@@ -7643,6 +7848,183 @@ function renderOnboarding(){
     '<button type="button" class="onb-btn-back" onclick="onbPrev()">← ' + (en ? 'Back' : 'Kembali') + '</button>' +
     '<button type="button" class="onb-btn-next" id="onbNextBtn" onclick="onbFinish(false)">' + (en ? 'Start Tracking 🚀' : 'Mulai Mencatat 🚀') + '</button>';
 }
+
+/* ===== FLUID & BOUNCY UI/UX ENHANCER (PAKET 1, 2, 3) ===== */
+function haptic(ms){
+  try {
+    if(navigator && typeof navigator.vibrate === 'function') navigator.vibrate(ms || 8);
+  } catch(e) {}
+}
+
+function animateHeroNum(el, target){
+  if(!el) return;
+  var to = Math.round(target || 0);
+  var prev = el.dataset.num !== undefined ? Number(el.dataset.num) : null;
+  el.dataset.num = String(to);
+  if(prev === null || isNaN(prev) || prev === to){
+    el.textContent = rp(to);
+    return;
+  }
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    el.textContent = rp(to);
+    return;
+  }
+  if(el._animId) cancelAnimationFrame(el._animId);
+  var start = performance.now();
+  var dur = 340;
+  function tick(now){
+    var t = Math.min(1, (now - start) / dur);
+    var ease = 1 - Math.pow(1 - t, 3);
+    el.textContent = rp(Math.round(prev + (to - prev) * ease));
+    if(t < 1) el._animId = requestAnimationFrame(tick);
+    else { el.textContent = rp(to); el._animId = 0; }
+  }
+  el._animId = requestAnimationFrame(tick);
+}
+
+function syncNavPill(instant){
+  var pill = $('navPill');
+  var wrap = document.querySelector('nav .in');
+  var active = document.querySelector('nav button.on:not(.fab)');
+  if(!pill || !wrap || !active){
+    if(pill) pill.classList.remove('ready');
+    return;
+  }
+  var wr = wrap.getBoundingClientRect();
+  var br = active.getBoundingClientRect();
+  if(!br.width) return;
+  if(instant) pill.style.transition = 'none';
+  pill.style.width = br.width + 'px';
+  pill.style.transform = 'translateX(' + (br.left - wr.left) + 'px)';
+  pill.classList.add('ready');
+  if(instant){
+    void pill.offsetWidth;
+    pill.style.transition = '';
+  }
+}
+
+function syncSegPill(seg){
+  if(!seg) return;
+  var active = seg.querySelector('button.on');
+  if(!active) return;
+  var pill = seg.querySelector('.seg-pill');
+  if(!pill){
+    pill = document.createElement('span');
+    pill.className = 'seg-pill';
+    pill.setAttribute('aria-hidden', 'true');
+    seg.insertBefore(pill, seg.firstChild);
+    seg.classList.add('has-pill');
+  }
+  if(seg.classList.contains('seg')){
+    pill.classList.remove('tp-out','tp-in','tp-trf');
+    if(active.classList.contains('out')) pill.classList.add('tp-out');
+    else if(active.classList.contains('in')) pill.classList.add('tp-in');
+    else if(active.classList.contains('trf')) pill.classList.add('tp-trf');
+  }
+  var left = active.offsetLeft;
+  var width = active.offsetWidth;
+  if(width > 0){
+    pill.style.width = width + 'px';
+    pill.style.transform = 'translateX(' + left + 'px)';
+  }
+}
+
+function syncAllSegPills(){
+  document.querySelectorAll('.seg, .period-seg, .view-seg').forEach(syncSegPill);
+}
+
+(function initFluidUI(){
+  function setup(){
+    syncNavPill(true);
+    syncAllSegPills();
+
+    window.addEventListener('resize', function(){
+      syncNavPill(true);
+      syncAllSegPills();
+    });
+
+    if(typeof MutationObserver !== 'undefined'){
+      document.querySelectorAll('.seg, .period-seg, .view-seg').forEach(function(seg){
+        var mo = new MutationObserver(function(){ syncSegPill(seg); });
+        mo.observe(seg, { subtree: true, attributes: true, attributeFilter: ['class'] });
+      });
+    }
+
+    var topEl = document.querySelector('.top');
+    if(topEl){
+      var onScroll = function(){ topEl.classList.toggle('scrolled', window.scrollY > 8); };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+
+    var sheets = [
+      ['edit', function(){ if(typeof closeEdit==='function') closeEdit(); }],
+      ['profModal', function(){ if(typeof closeProfileModal==='function') closeProfileModal(); }],
+      ['filterModal', function(){ if(typeof closeFilterModal==='function') closeFilterModal(); }],
+      ['budDetailModal', function(){ if(typeof closeBudgetDetail==='function') closeBudgetDetail(); }],
+      ['walletOptModal', function(){ if(typeof closeWalletOptModal==='function') closeWalletOptModal(); }],
+      ['walletAddModal', function(){ if(typeof closeWalletAddModal==='function') closeWalletAddModal(); }],
+      ['catAddModal', function(){ if(typeof closeCatAddModal==='function') closeCatAddModal(); }],
+      ['budAddModal', function(){ if(typeof closeBudAddModal==='function') closeBudAddModal(); }],
+      ['recModal', function(){ if(typeof closeRecModal==='function') closeRecModal(); }],
+      ['evModal', function(){ if(typeof closeEvModal==='function') closeEvModal(); }],
+      ['evDetailModal', function(){ if(typeof closeEvDetail==='function') closeEvDetail(); }],
+      ['confirmSheet', function(){ if(typeof closeConfirmSheet==='function') closeConfirmSheet(); }]
+    ];
+
+    sheets.forEach(function(pair){
+      var el = $(pair[0]), closeFn = pair[1];
+      if(!el) return;
+      if(!el.querySelector('.sheet-grab')){
+        var grab = document.createElement('div');
+        grab.className = 'sheet-grab';
+        grab.setAttribute('aria-hidden', 'true');
+        el.insertBefore(grab, el.firstChild);
+      }
+      var sy = 0, dy = 0, t0 = 0, dragging = false;
+      el.addEventListener('touchstart', function(e){
+        if(!el.classList.contains('open') || !e.touches || e.touches.length !== 1) return;
+        var tag = (e.target && e.target.tagName) || '';
+        if(/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+        if(el.scrollTop > 4) return;
+        sy = e.touches[0].clientY;
+        dy = 0;
+        t0 = Date.now();
+        dragging = true;
+      }, { passive: true });
+
+      el.addEventListener('touchmove', function(e){
+        if(!dragging || !e.touches || !e.touches.length) return;
+        var cur = e.touches[0].clientY - sy;
+        if(cur <= 0){
+          dy = 0;
+          el.style.transition = '';
+          el.style.transform = '';
+          return;
+        }
+        if(el.scrollTop > 4){ dragging = false; el.style.transform = ''; return; }
+        dy = cur;
+        el.style.transition = 'none';
+        el.style.transform = 'translateY(' + Math.round(dy) + 'px)';
+      }, { passive: true });
+
+      el.addEventListener('touchend', function(){
+        if(!dragging) return;
+        dragging = false;
+        el.style.transition = '';
+        el.style.transform = '';
+        var dt = Date.now() - t0;
+        if(dy > 90 || (dy > 42 && dt < 240)){
+          haptic(8);
+          closeFn();
+        }
+        dy = 0;
+      }, { passive: true });
+    });
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
+  else setup();
+})();
 
 /* Inisialisasi Tema, Bahasa, Ikon PNG iOS & Muat Data */
 applyTheme(APP_THEME);
