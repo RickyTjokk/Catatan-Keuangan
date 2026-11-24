@@ -597,7 +597,8 @@ nav button.fab.open svg{transform:rotate(45deg)}
   border-left:4px solid #f59e0b;cursor:pointer;transition:.15s}
 .alert-card.over{border-left-color:var(--red)}
 .alert-card:active{transform:scale(.99)}
-.alert-hdr{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:6px}
+.alert-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;font-weight:700;margin-bottom:6px}
+.alert-hdr .link,.alert-hdr span:last-child{white-space:nowrap;flex:none}
 .alert-list{display:flex;flex-direction:column;gap:5px}
 .alert-item{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;gap:8px}
 .alert-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
@@ -1123,7 +1124,22 @@ nav button.fab{margin-top:0;width:54px;height:54px;border:0}
 .sw input:checked+.slid::before{transform:translateX(18px)}
 
 /* ===== FLUID & BOUNCY UI/UX UPGRADE (PAKET 1, 2, 3) ===== */
-:root{--spring:cubic-bezier(.34,1.56,.64,1);--ease-out:cubic-bezier(.22,1.12,.36,1)}
+:root{
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  --ease-out:cubic-bezier(.22,1.12,.36,1);
+  --sat:env(safe-area-inset-top, 0px);
+  --sab:env(safe-area-inset-bottom, 0px);
+}
+
+/* Safe-Area konsisten untuk header, #app, modal kategori, & navbar */
+#app{padding:var(--sat) 16px calc(112px + var(--sab));min-height:100dvh}
+.top{padding:calc(14px + var(--sat)) 16px 10px;margin-top:calc(-1 * var(--sat))}
+.cm-top{padding:calc(12px + var(--sat)) 16px 8px}
+.cm-body{padding:8px 16px calc(24px + var(--sab))}
+nav{bottom:calc(10px + var(--sab))}
+#toast,#undoToast{bottom:calc(104px + var(--sab))}
+#fabMenu{bottom:calc(112px + var(--sab))}
+#batchBar{bottom:calc(78px + var(--sab))}
 
 /* 1. Tabular Numbers untuk semua angka keuangan */
 .hero .big,.hero .chip b,.drow .amt,.wrow .bal b,.home-wrow .wbal,.bal-strip b,.dtot,
@@ -1136,7 +1152,7 @@ nav .in{position:relative}
 #navPill{
   position:absolute;top:0;left:0;height:48px;border-radius:18px;
   background:rgba(79,70,229,.15);border:1px solid rgba(79,70,229,.18);
-  transition:transform .42s var(--spring),width .32s var(--spring),opacity .2s;
+  transition:transform .42s var(--spring),width .32s var(--spring),height .25s,opacity .2s;
   pointer-events:none;z-index:0;opacity:0;
 }
 #navPill.ready{opacity:1}
@@ -1148,6 +1164,8 @@ nav button.on:not(.fab) svg{animation:navPop .42s var(--spring)}
 nav button.fab{transition:transform .38s var(--spring),box-shadow .25s}
 nav button.fab:active{transform:scale(.88)}
 nav button.fab svg{transition:transform .38s var(--spring)}
+#fabMenu{visibility:hidden;transition:visibility 0s linear .28s}
+#fabMenu.on{visibility:visible;transition:visibility 0s}
 .fab-opt{transition:.3s var(--spring)}
 
 /* 3. Directional View Transitions (Bouncy) */
@@ -1179,10 +1197,31 @@ nav button.fab svg{transition:transform .38s var(--spring)}
 .cgrp-card.open .cgrp-rows{grid-template-rows:1fr;opacity:1;margin-top:10px;padding-top:6px;border-top:1px solid var(--line)}
 .port-chev,.cgrp-chev{transition:transform .3s var(--spring)}
 
-/* 6. Native Bottom Sheets, Grabber Handle, Glass & Bouncy Spring */
+/* 6. Native Bottom Sheets, Bulletproof Modal Hiding, Grabber Handle & Bouncy Spring */
+#catModal{
+  transform:translateY(calc(100% + 60px));opacity:0;visibility:hidden;pointer-events:none;
+  transition:transform .32s var(--ease-out),opacity .2s,visibility 0s linear .32s !important;
+}
+#catModal.open{
+  transform:none;opacity:1;visibility:visible;pointer-events:auto;
+  transition:transform .32s var(--ease-out),opacity .18s,visibility 0s !important;
+}
+#onbModal{visibility:hidden}
+#onbModal.open{visibility:visible}
 #edit,#pad,#catAddModal,#budAddModal,#budDetailModal,#walletAddModal,#walletOptModal,#confirmSheet,#profModal,#filterModal,#recModal,#evModal,#evDetailModal{
-  transition:transform .36s var(--ease-out) !important;
+  transform:translateY(calc(100% + 48px));
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:transform .36s var(--ease-out),opacity .2s,visibility 0s linear .36s !important;
   will-change:transform;
+}
+#edit.open,#pad.open,#catAddModal.open,#budAddModal.open,#budDetailModal.open,#walletAddModal.open,#walletOptModal.open,#confirmSheet.open,#profModal.open,#filterModal.open,#recModal.open,#evModal.open,#evDetailModal.open{
+  transform:none !important;
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transition:transform .36s var(--ease-out),opacity .18s,visibility 0s !important;
 }
 #recModal,#evModal,#evDetailModal{
   background:var(--glass-strong);border-top:1px solid var(--glass-brd);
@@ -1194,7 +1233,7 @@ nav button.fab svg{transition:transform .38s var(--spring)}
 }
 .sheet-grab{
   width:38px;height:4.5px;border-radius:99px;background:var(--muted);opacity:.32;
-  margin:-4px auto 12px;flex:none;pointer-events:none;
+  margin:-2px auto 10px;flex:none;pointer-events:none;
 }
 
 /* 7. Sliding Segmented Controls */
@@ -7882,6 +7921,29 @@ function animateHeroNum(el, target){
   el._animId = requestAnimationFrame(tick);
 }
 
+function applySafeAreaFallback(){
+  try {
+    var ua = navigator.userAgent || '';
+    var isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var isStandalone = (window.navigator.standalone === true) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+    if(!isIOS || !isStandalone) return;
+    var probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none';
+    document.body.appendChild(probe);
+    var cs = getComputedStyle(probe);
+    var sat = parseFloat(cs.paddingTop) || 0;
+    var sab = parseFloat(cs.paddingBottom) || 0;
+    document.body.removeChild(probe);
+    var longSide = Math.max(window.screen.height || 0, window.screen.width || 0);
+    if(sat <= 0){
+      document.documentElement.style.setProperty('--sat', (longSide >= 812 ? 54 : 20) + 'px');
+    }
+    if(sab <= 0 && longSide >= 812){
+      document.documentElement.style.setProperty('--sab', '34px');
+    }
+  } catch(e) {}
+}
+
 function syncNavPill(instant){
   var pill = $('navPill');
   var wrap = document.querySelector('nav .in');
@@ -7895,7 +7957,8 @@ function syncNavPill(instant){
   if(!br.width) return;
   if(instant) pill.style.transition = 'none';
   pill.style.width = br.width + 'px';
-  pill.style.transform = 'translateX(' + (br.left - wr.left) + 'px)';
+  pill.style.height = br.height + 'px';
+  pill.style.transform = 'translate3d(' + (br.left - wr.left) + 'px,' + (br.top - wr.top) + 'px,0)';
   pill.classList.add('ready');
   if(instant){
     void pill.offsetWidth;
@@ -7935,10 +7998,18 @@ function syncAllSegPills(){
 
 (function initFluidUI(){
   function setup(){
+    applySafeAreaFallback();
     syncNavPill(true);
     syncAllSegPills();
+    setTimeout(function(){ syncNavPill(true); syncAllSegPills(); }, 120);
 
+    window.addEventListener('load', function(){
+      applySafeAreaFallback();
+      syncNavPill(true);
+      syncAllSegPills();
+    });
     window.addEventListener('resize', function(){
+      applySafeAreaFallback();
       syncNavPill(true);
       syncAllSegPills();
     });
