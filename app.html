@@ -1316,14 +1316,7 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
         </button>
       </div>
       <div id="activeFilterChips" class="active-chips" style="display:none"></div>
-      <div class="sort-row">
-        <div class="fmeta" id="fMeta" style="margin:0"></div>
-        <div class="sort-seg" id="sortSeg">
-          <button type="button" class="on" data-s="newest" onclick="setListSort('newest')">Terbaru</button>
-          <button type="button" data-s="highest" onclick="setListSort('highest')">Terbesar</button>
-          <button type="button" data-s="lowest" onclick="setListSort('lowest')">Terkecil</button>
-        </div>
-      </div>
+      <div class="fmeta" id="fMeta"></div>
     </div>
     <div id="list"></div>
   </section>
@@ -1342,6 +1335,15 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
     <div class="fgrid-chips range">
       <button type="button" id="fmMonthBtn" onclick="pickDraftRange(false)">Bulan ini</button>
       <button type="button" id="fmAllMonthBtn" onclick="pickDraftRange(true)">🌐 Semua Bulan</button>
+    </div>
+  </div>
+
+  <div class="fsec">
+    <span class="fsec-lbl" id="fmSortLbl">Urutkan</span>
+    <div class="fgrid-chips" id="fmSortChips" style="grid-template-columns:repeat(3,1fr)">
+      <button type="button" data-s="newest" onclick="pickDraftSort('newest')">Tanggal</button>
+      <button type="button" data-s="highest" onclick="pickDraftSort('highest')">Terbesar</button>
+      <button type="button" data-s="lowest" onclick="pickDraftSort('lowest')">Terkecil</button>
     </div>
   </div>
 
@@ -2405,8 +2407,9 @@ function applyLang(){
   if($('lblTrend3Title')) $('lblTrend3Title').textContent = en ? '📈 Income vs Expense (3 Months)' : '📈 Pemasukan vs Pengeluaran (3 Bulan)';
   if($('lblTrend3SaveTitle')) $('lblTrend3SaveTitle').textContent = en ? '💰 Summary & Saving Rate' : '💰 Ringkasan & Saving Rate';
   if($('eDupBtn')) $('eDupBtn').textContent = en ? '📋 Duplicate to Today' : '📋 Duplikat ke Hari Ini';
-  document.querySelectorAll('#sortSeg button').forEach(function(b){
-    var m = { newest: en ? 'Newest' : 'Terbaru', highest: en ? 'Highest' : 'Terbesar', lowest: en ? 'Lowest' : 'Terkecil' };
+  if($('fmSortLbl')) $('fmSortLbl').textContent = en ? 'Sort by' : 'Urutkan';
+  document.querySelectorAll('#fmSortChips button').forEach(function(b){
+    var m = { newest: en ? 'Date' : 'Tanggal', highest: en ? 'Highest' : 'Terbesar', lowest: en ? 'Lowest' : 'Terkecil' };
     if(m[b.dataset.s]) b.textContent = m[b.dataset.s];
   });
   if($('recModalTitle')) $('recModalTitle').textContent = en ? '🔁 Recurring & Bills' : '🔁 Tagihan & Transaksi Rutin';
@@ -4773,6 +4776,7 @@ var draftFilterAllMonths = false;
 var draftFilterType = 'Semua';
 var draftFilterWallet = 'Semua';
 var draftFilterEvent = 'Semua';
+var draftSort = 'newest';
 
 function updateFilterBadge(){
   var count = 0;
@@ -4780,6 +4784,7 @@ function updateFilterBadge(){
   if(listFilterType !== 'Semua') count++;
   if(listFilterWallet !== 'Semua') count++;
   if(listFilterEvent !== 'Semua') count++;
+  if(listSort !== 'newest') count++;
   var btn = $('fOpenBtn'), badge = $('fBadgeCount');
   if(!btn || !badge) return;
   btn.classList.toggle('has-filter', count > 0);
@@ -4815,6 +4820,9 @@ function renderFilterModalEvents(){
 function syncDraftFilterUI(){
   $('fmMonthBtn').classList.toggle('on', !draftFilterAllMonths);
   $('fmAllMonthBtn').classList.toggle('on', draftFilterAllMonths);
+  document.querySelectorAll('#fmSortChips button[data-s]').forEach(function(b){
+    b.classList.toggle('on', b.dataset.s === draftSort);
+  });
   document.querySelectorAll('#fmTypeChips button[data-f]').forEach(function(b){
     b.classList.toggle('on', b.dataset.f === draftFilterType);
   });
@@ -4827,6 +4835,7 @@ function openFilterModal(){
   draftFilterType = listFilterType;
   draftFilterWallet = listFilterWallet;
   draftFilterEvent = listFilterEvent;
+  draftSort = listSort;
   syncDraftFilterUI();
   $('filterBg').classList.add('open');
   $('filterModal').classList.add('open');
@@ -4839,6 +4848,11 @@ function closeFilterModal(){
 
 function pickDraftRange(isAll){
   draftFilterAllMonths = !!isAll;
+  syncDraftFilterUI();
+}
+
+function pickDraftSort(s){
+  draftSort = s || 'newest';
   syncDraftFilterUI();
 }
 
@@ -4862,6 +4876,7 @@ function resetFilterModal(){
   draftFilterType = 'Semua';
   draftFilterWallet = 'Semua';
   draftFilterEvent = 'Semua';
+  draftSort = 'newest';
   syncDraftFilterUI();
 }
 
@@ -4871,6 +4886,7 @@ function applyFilterModal(){
   listFilterType = draftFilterType;
   listFilterWallet = draftFilterWallet;
   listFilterEvent = draftFilterEvent;
+  listSort = draftSort;
   updateFilterBadge();
   closeFilterModal();
   if(listAllMonths){
@@ -4937,6 +4953,7 @@ function clearSingleFilter(kind){
   else if(kind === 'wallet') listFilterWallet = 'Semua';
   else if(kind === 'event') listFilterEvent = 'Semua';
   else if(kind === 'date'){ listFilterDate = ''; renderCalendar(); }
+  else if(kind === 'sort') listSort = 'newest';
   updateFilterBadge();
   if(listAllMonths) fetchCrossMonth(); else renderDays();
 }
@@ -4949,6 +4966,10 @@ function renderActiveFilterChips(){
     var dp = listFilterDate.split('-').map(Number);
     var dLbl = ('0'+dp[2]).slice(-2) + ' ' + BLN[dp[1]-1].slice(0,3) + ' ' + dp[0];
     chips.push('<button type="button" class="achip" onclick="clearSingleFilter(\'date\')">📅 '+esc(dLbl)+' ✕</button>');
+  }
+  if(listSort !== 'newest'){
+    var sLbl = listSort === 'highest' ? (en ? 'Highest' : 'Terbesar') : (en ? 'Lowest' : 'Terkecil');
+    chips.push('<button type="button" class="achip" onclick="clearSingleFilter(\'sort\')">↕ '+esc(sLbl)+' ✕</button>');
   }
   if(listAllMonths) chips.push('<button type="button" class="achip" onclick="clearSingleFilter(\'allMonths\')">'+(en?'🌐 All Months':'🌐 Semua Bulan')+' ✕</button>');
   if(listFilterType !== 'Semua') chips.push('<button type="button" class="achip" onclick="clearSingleFilter(\'type\')">'+esc(trCat(listFilterType))+' ✕</button>');
