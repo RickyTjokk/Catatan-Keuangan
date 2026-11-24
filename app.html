@@ -1015,12 +1015,12 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
   <!-- LAPORAN PEMASUKAN & PENGELUARAN -->
   <section class="view" id="v-lap">
     <div class="subhead">
-      <button type="button" class="backbtn" onclick="go('list')">‹ Kembali</button>
+      <button type="button" id="btnLapBack" class="backbtn" onclick="go('list')">‹ Kembali</button>
       <span id="lapMonth" style="font-size:13px;color:var(--muted);font-weight:600"></span>
     </div>
     <div class="lap-act-bar">
-      <button type="button" onclick="exportMonthlyPdf()">🖨️ Cetak / PDF</button>
-      <button type="button" onclick="exportToExcel()">📥 Export Excel</button>
+      <button type="button" id="btnLapPdf" onclick="exportMonthlyPdf()">🖨️ Cetak / PDF</button>
+      <button type="button" id="btnLapExcel" onclick="exportToExcel()">📥 Export Excel</button>
     </div>
     <div class="stat2">
       <div class="sbox"><small id="lapLblIn">Total Masuk</small><b id="lapIn" style="color:var(--green)">Rp 0</b></div>
@@ -1104,7 +1104,7 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
       <div class="hero">
         <div class="htop">
           <small id="lblEvHero">Total pengeluaran event aktif</small>
-          <button type="button" class="add-bud-btn" style="background:rgba(255,255,255,.22);color:#fff" onclick="openEvModal()">+ Buat Event</button>
+          <button type="button" id="btnCreateEvent" class="add-bud-btn" style="background:rgba(255,255,255,.22);color:#fff" onclick="openEvModal()">+ Buat Event</button>
         </div>
         <div class="big" id="evHeroTot">Rp 0</div>
         <div class="row">
@@ -1352,20 +1352,20 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
     <button type="button" class="link" id="profCloseBtn" onclick="closeProfileModal()">Tutup</button>
   </div>
   <div class="card" style="margin-bottom:12px">
-    <h3>⚡ Kelola &amp; Fitur</h3>
+    <h3 id="profFeatTitle">⚡ Kelola &amp; Fitur</h3>
     <button type="button" class="catbtn" style="margin-bottom:8px" onclick="openCatManageFromProfile()">
       <div class="ico">📂</div>
       <div class="cmid">
-        <b>Kelola Kategori</b>
-        <small>Tambah, hapus &amp; seret urutan kategori / sub-kategori</small>
+        <b id="profCatTitle">Kelola Kategori</b>
+        <small id="profCatSub">Tambah, hapus &amp; seret urutan kategori / sub-kategori</small>
       </div>
       <span class="chev">›</span>
     </button>
     <button type="button" class="catbtn" onclick="openEventsFromProfile()">
       <div class="ico">✈️</div>
       <div class="cmid">
-        <b>Event &amp; Trip</b>
-        <small>Catat liburan, acara khusus &amp; kurs mata uang asing</small>
+        <b id="profEvTitle">Event &amp; Trip</b>
+        <small id="profEvSub">Catat liburan, acara khusus &amp; kurs mata uang asing</small>
       </div>
       <span class="chev">›</span>
     </button>
@@ -2289,7 +2289,49 @@ function applyLang(){
   if($('fmResetBtn')) $('fmResetBtn').textContent = 'Reset';
   if($('fmApplyBtn')) $('fmApplyBtn').textContent = en ? 'Apply' : 'Terapkan';
   var delTxBtn = document.querySelector('#edit .deltx');
-  if(delTxBtn) delTxBtn.textContent = APP_LANG === 'en' ? '🗑 Delete transaction' : '🗑 Hapus transaksi';
+  if(delTxBtn) delTxBtn.textContent = en ? '🗑 Delete transaction' : '🗑 Hapus transaksi';
+
+  // Profil shortcuts, Laporan, Budget/Event tabs & Event modal
+  if($('profFeatTitle')) $('profFeatTitle').textContent = en ? '⚡ Manage & Features' : '⚡ Kelola & Fitur';
+  if($('profCatTitle')) $('profCatTitle').textContent = en ? 'Manage Categories' : 'Kelola Kategori';
+  if($('profCatSub')) $('profCatSub').textContent = en ? 'Add, delete & drag to reorder categories' : 'Tambah, hapus & seret urutan kategori / sub-kategori';
+  if($('profEvTitle')) $('profEvTitle').textContent = en ? 'Events & Trips' : 'Event & Trip';
+  if($('profEvSub')) $('profEvSub').textContent = en ? 'Track holidays, special events & foreign currencies' : 'Catat liburan, acara khusus & kurs mata uang asing';
+
+  if($('btnLapBack')) $('btnLapBack').textContent = dict.catBack;
+  if($('btnLapPdf')) $('btnLapPdf').textContent = en ? '🖨️ Print / PDF' : '🖨️ Cetak / PDF';
+  if($('btnLapExcel')) $('btnLapExcel').textContent = en ? '📥 Export Excel' : '📥 Export Excel';
+  if($('aiAdvBtn') && !$('aiAdvBtn').disabled) $('aiAdvBtn').textContent = en ? 'Analyze Month' : 'Analisa Bulan Ini';
+  if($('lapDonutTitle')) $('lapDonutTitle').textContent = en ? '🍩 Expense Breakdown (Tap Slice)' : '🍩 Proporsi Pengeluaran (Ketuk Irisan)';
+
+  if($('segBudBtn')) $('segBudBtn').textContent = en ? '🎯 Monthly Budget' : '🎯 Budget Bulanan';
+  if($('segEvBtn')) $('segEvBtn').textContent = en ? '✈️ Events & Trips' : '✈️ Event & Trip';
+  if($('budFootNote')) $('budFootNote').innerHTML = en ? 'Tap a category above to edit its budget.<br>Enter 0 to remove it from your budget plan.' : 'Ketuk kategori di atas untuk mengubah nominal budget.<br>Isi 0 jika ingin menghapus kategori dari rencana budget.';
+  if($('lblEvHero')) $('lblEvHero').textContent = en ? 'Total active event spending' : 'Total pengeluaran event aktif';
+  if($('btnCreateEvent')) $('btnCreateEvent').textContent = en ? '+ Create Event' : '+ Buat Event';
+  if($('lblEvActCnt')) $('lblEvActCnt').textContent = en ? '🔥 Active Events' : '🔥 Event Aktif';
+  if($('lblEvDoneCnt')) $('lblEvDoneCnt').textContent = en ? '✅ Completed' : '✅ Selesai';
+  if($('lblEvDoneTitle')) $('lblEvDoneTitle').textContent = en ? 'Completed / Archived Events' : 'Event Selesai / Arsip';
+  if($('lblEventField')) $('lblEventField').textContent = en ? 'Event / Trip (optional)' : 'Event / Trip (opsional)';
+  if($('eEventTitle')) $('eEventTitle').textContent = en ? 'Event / Trip (optional)' : 'Event / Trip (opsional)';
+  if($('fmEventLbl')) $('fmEventLbl').textContent = en ? 'Event / Trip' : 'Event / Trip';
+
+  if($('evIcoLbl')) $('evIcoLbl').textContent = en ? 'Choose Icon' : 'Pilih Ikon';
+  if($('evNameLbl')) $('evNameLbl').textContent = en ? 'Event Name' : 'Nama Event';
+  if($('evNameIn')) $('evNameIn').placeholder = en ? 'e.g. Japan Trip, Wedding, Renovation' : 'mis. Trip Jepang, Nikahan, Renovasi';
+  if($('evCurLbl')) $('evCurLbl').textContent = en ? 'Event Currency' : 'Mata Uang Event';
+  if($('evRateLbl')) $('evRateLbl').textContent = en ? 'Exchange Rate to IDR (1 Unit = Rp ?)' : 'Kurs ke Rupiah (1 Mata Uang = Rp ?)';
+  if($('evLiveRateBtn') && !$('evLiveRateBtn').disabled) $('evLiveRateBtn').textContent = en ? '🔄 Live Rate' : '🔄 Kurs Live';
+  if($('evBudLbl')) $('evBudLbl').textContent = en ? 'Target Budget (Rp, optional)' : 'Target Budget (Rp, opsional)';
+  if($('evStartLbl')) $('evStartLbl').textContent = en ? 'Start Date' : 'Tanggal Mulai';
+  if($('evEndLbl')) $('evEndLbl').textContent = en ? 'End Date' : 'Tanggal Selesai';
+  if($('evExclLbl')) $('evExclLbl').textContent = en ? 'Exclude from daily average chart' : 'Kecualikan dari grafik rata-rata';
+  if($('evExclSub')) $('evExclSub').textContent = en ? 'Keep large events from skewing daily spending average' : 'Agar pengeluaran besar (nikahan/trip) tidak merusak rata-rata harian';
+  if($('evSaveBtn') && !$('evSaveBtn').disabled) $('evSaveBtn').textContent = en ? 'Save Event' : 'Simpan Event';
+  var evClose = document.querySelector('#evModal .ehead button');
+  if(evClose) evClose.textContent = dict.close;
+  var evDetClose = document.querySelector('#evDetailModal .ehead button');
+  if(evDetClose) evDetClose.textContent = dict.close;
 
   document.querySelectorAll('#langSeg button').forEach(function(b){
     b.classList.toggle('on', b.dataset.lg === APP_LANG);
@@ -4625,8 +4667,9 @@ function renderFilterModalEvents(){
   var evs = (S && S.events) || [];
   if(!evs.length){ sec.style.display = 'none'; return; }
   sec.style.display = '';
-  var html = '<button type="button" class="'+(draftFilterEvent==='Semua'?'on':'')+'" onclick="pickDraftEvent(\'Semua\')">Semua</button>';
-  html += '<button type="button" class="'+(draftFilterEvent==='__NONE__'?'on':'')+'" onclick="pickDraftEvent(\'__NONE__\')">Tanpa Event</button>';
+  var en = APP_LANG === 'en';
+  var html = '<button type="button" class="'+(draftFilterEvent==='Semua'?'on':'')+'" onclick="pickDraftEvent(\'Semua\')">'+(en?'All':'Semua')+'</button>';
+  html += '<button type="button" class="'+(draftFilterEvent==='__NONE__'?'on':'')+'" onclick="pickDraftEvent(\'__NONE__\')">'+(en?'No Event':'Tanpa Event')+'</button>';
   evs.forEach(function(ev){
     html += '<button type="button" class="'+(draftFilterEvent===ev.id?'on':'')+'" onclick="pickDraftEvent(\''+esc(ev.id)+'\')"><span>'+esc(ev.icon||'✈️')+' '+esc(ev.name)+'</span></button>';
   });
@@ -5440,29 +5483,31 @@ function renderAiAdvisorCached(){
 function renderAiReviewResult(res){
   var body = $('aiAdvBody');
   if(!body || !res) return;
+  var en = APP_LANG === 'en';
   var mkList = function(arr){ return '<ul>' + (arr || []).map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; };
   var scoreColor = res.score >= 80 ? '#10b981' : (res.score >= 60 ? '#f59e0b' : '#ef4444');
   body.innerHTML =
     '<div class="ai-score-row">'+
       '<div class="ai-score-ring" style="background:'+scoreColor+'">'+res.score+'</div>'+
-      '<div style="flex:1"><b style="display:block;font-size:13.5px;color:var(--text)">'+esc(res.headline)+'</b><small style="color:var(--muted)">Skor kesehatan keuangan ('+esc(res.ym)+')</small></div>'+
+      '<div style="flex:1"><b style="display:block;font-size:13.5px;color:var(--text)">'+esc(res.headline)+'</b><small style="color:var(--muted)">'+(en ? 'Financial health score (' : 'Skor kesehatan keuangan (')+esc(res.ym)+')</small></div>'+
     '</div>'+
-    (res.highlights && res.highlights.length ? '<div class="ai-sec"><b>✅ Hal Positif</b>'+mkList(res.highlights)+'</div>' : '')+
-    (res.warnings && res.warnings.length ? '<div class="ai-sec"><b>⚠️ Perlu Diwaspadai</b>'+mkList(res.warnings)+'</div>' : '')+
-    (res.tips && res.tips.length ? '<div class="ai-sec"><b>💡 Saran Praktis</b>'+mkList(res.tips)+'</div>' : '');
+    (res.highlights && res.highlights.length ? '<div class="ai-sec"><b>'+(en ? '✅ Highlights' : '✅ Hal Positif')+'</b>'+mkList(res.highlights)+'</div>' : '')+
+    (res.warnings && res.warnings.length ? '<div class="ai-sec"><b>'+(en ? '⚠️ Watch Out' : '⚠️ Perlu Diwaspadai')+'</b>'+mkList(res.warnings)+'</div>' : '')+
+    (res.tips && res.tips.length ? '<div class="ai-sec"><b>'+(en ? '💡 Actionable Tips' : '💡 Saran Praktis')+'</b>'+mkList(res.tips)+'</div>' : '');
 }
 function runAiMonthlyReview(){
   if(!S) return;
+  var en = APP_LANG === 'en';
   var btn = $('aiAdvBtn');
-  if(btn){ btn.disabled = true; btn.textContent = '⏳ Menganalisa…'; }
+  if(btn){ btn.disabled = true; btn.textContent = en ? '⏳ Analyzing…' : '⏳ Menganalisa…'; }
   call('analyzeMonthWithAI', S.ym, APP_LANG)
     .then(function(res){
       try { localStorage.setItem(aiCacheKey(S.ym), JSON.stringify(res)); } catch(e) {}
       renderAiReviewResult(res);
-      toast('Analisa AI selesai ✨');
+      toast(en ? 'AI analysis complete ✨' : 'Analisa AI selesai ✨');
     })
-    .catch(function(e){ toast('AI Gagal: ' + (e.message || e)); })
-    .then(function(){ if(btn){ btn.disabled = false; btn.textContent = 'Analisa Bulan Ini'; } });
+    .catch(function(e){ toast((en ? 'AI Failed: ' : 'AI Gagal: ') + (e.message || e)); })
+    .then(function(){ if(btn){ btn.disabled = false; btn.textContent = en ? 'Analyze Month' : 'Analisa Bulan Ini'; } });
 }
 
 /* ===== EXPORT PDF (CETAK LAPORAN BULANAN & EVENT) ===== */
