@@ -1161,15 +1161,15 @@ nav button.fab svg{transition:transform .38s var(--spring)}
 #fabMenu.on{visibility:visible;transition:visibility 0s}
 .fab-opt{transition:.3s var(--spring)}
 
-/* 3. Directional View Transitions (Bouncy) */
-.view.on{animation:viewFade .28s var(--ease-out)}
-.view.on.dir-r{animation:viewFromRight .34s var(--ease-out)}
-.view.on.dir-l{animation:viewFromLeft .34s var(--ease-out)}
-.view.on.dir-up{animation:viewPushUp .32s var(--ease-out)}
-@keyframes viewFade{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:none}}
-@keyframes viewFromRight{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
-@keyframes viewFromLeft{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
-@keyframes viewPushUp{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+/* 3. Directional View Transitions (Lightweight) */
+.view.on{animation:viewFade .18s var(--ease-out)}
+.view.on.dir-r{animation:viewFromRight .22s var(--ease-out)}
+.view.on.dir-l{animation:viewFromLeft .22s var(--ease-out)}
+.view.on.dir-up{animation:viewPushUp .2s var(--ease-out)}
+@keyframes viewFade{from{opacity:0}to{opacity:1}}
+@keyframes viewFromRight{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes viewFromLeft{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+@keyframes viewPushUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
 /* 4. Animasi Ganti Bulan & Tap-to-Today */
 #mLabel{cursor:pointer;display:inline-block;transition:transform .2s var(--spring),opacity .18s}
@@ -1183,40 +1183,33 @@ nav button.fab svg{transition:transform .38s var(--spring)}
 .port-body,.cgrp-rows{
   display:grid !important;grid-template-rows:0fr;opacity:0;
   margin-top:0;padding-top:0;border-top:0 solid transparent;
-  transition:grid-template-rows .34s var(--ease-out),opacity .24s,margin-top .28s,padding-top .28s;
+  transition:grid-template-rows .26s var(--ease-out),opacity .2s,margin-top .22s,padding-top .22s;
 }
 .port-body>.acc-in,.cgrp-rows>.acc-in{overflow:hidden;min-height:0}
 .port-card.open .port-body{grid-template-rows:1fr;opacity:1;margin-top:11px;padding-top:11px;border-top:1px solid var(--line)}
 .cgrp-card.open .cgrp-rows{grid-template-rows:1fr;opacity:1;margin-top:10px;padding-top:6px;border-top:1px solid var(--line)}
-.port-chev,.cgrp-chev{transition:transform .3s var(--spring)}
+.port-chev,.cgrp-chev{transition:transform .25s var(--spring)}
 
-/* 6. Native Bottom Sheets, Bulletproof Modal Hiding, Grabber Handle & Anti Click-Through */
+/* 6. Native Bottom Sheets (display:none saat tertutup agar GPU & RAM iOS WebKit sangat ringan) */
 body.nav-shield nav,body.nav-shield nav *{pointer-events:none !important}
-#catModal{
-  transform:translateY(105%);visibility:hidden;pointer-events:none;
-  transition:transform .28s var(--ease-out),visibility 0s linear .28s !important;
-}
-#catModal.open{
-  transform:translateY(0);visibility:visible;pointer-events:auto;
-  transition:transform .28s var(--ease-out),visibility 0s !important;
-}
-#onbModal{visibility:hidden}
-#onbModal.open{visibility:visible}
+#catModal{display:none !important;transform:none;pointer-events:none}
+#catModal.open{display:flex !important;transform:none;pointer-events:auto;animation:catModalIn .18s var(--ease-out)}
+@keyframes catModalIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#onbModal{display:none !important}
+#onbModal.open{display:flex !important}
 #edit,#pad,#catAddModal,#budAddModal,#budDetailModal,#walletAddModal,#walletOptModal,#confirmSheet,#profModal,#filterModal,#recModal,#evModal,#evDetailModal{
-  transform:translateY(calc(100% + 48px));
-  visibility:hidden;
-  pointer-events:none;
-  transition:transform .3s var(--ease-out),visibility 0s linear .3s !important;
+  display:none !important;pointer-events:none;
 }
-#edit.open,#pad.open,#catAddModal.open,#budAddModal.open,#budDetailModal.open,#walletAddModal.open,#walletOptModal.open,#confirmSheet.open,#profModal.open,#filterModal.open,#recModal.open,#evModal.open,#evDetailModal.open{
-  transform:translateY(0) !important;
-  visibility:visible;
-  pointer-events:auto;
-  transition:transform .3s var(--ease-out),visibility 0s !important;
+#edit.open,#pad.open,#catAddModal.open,#budDetailModal.open,#walletAddModal.open,#walletOptModal.open,#confirmSheet.open,#profModal.open,#filterModal.open,#recModal.open,#evModal.open,#evDetailModal.open{
+  display:block !important;transform:none;pointer-events:auto;animation:sheetPop .2s var(--ease-out);
 }
+#budAddModal.open{
+  display:flex !important;transform:none;pointer-events:auto;animation:sheetPop .2s var(--ease-out);
+}
+@keyframes sheetPop{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
 #recModal,#evModal,#evDetailModal{
   background:var(--glass-strong);border-top:1px solid var(--glass-brd);
-  box-shadow:var(--glass-hi),0 -10px 40px rgba(0,0,0,.2);
+  box-shadow:var(--glass-hi),0 -8px 28px rgba(0,0,0,.18);
 }
 .sheet-grab{
   width:38px;height:4.5px;border-radius:99px;background:var(--muted);opacity:.32;
@@ -1332,9 +1325,8 @@ body.nav-shield nav,body.nav-shield nav *{pointer-events:none !important}
   position:relative;flex:none;width:222px;scroll-snap-align:start;
   border-radius:22px;padding:15px 16px;color:#fff;overflow:hidden;cursor:pointer;text-align:left;
   border:1px solid rgba(255,255,255,.22);
-  box-shadow:0 10px 24px rgba(15,23,42,.16);
-  transition:transform .22s var(--spring),box-shadow .22s;
-  animation:rowRise .32s var(--ease-out) backwards;
+  box-shadow:0 6px 16px rgba(15,23,42,.12);
+  transition:transform .2s var(--spring);
 }
 .wcard:active{transform:scale(.965)}
 .wcard::before{
@@ -1421,17 +1413,10 @@ body.priv-pulse #lFreeCash,body.priv-pulse #portTot{
 .ai-adv-btn{position:relative;overflow:hidden}
 @keyframes aiShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-/* #8 Tinted Icon Glow, Stagger & Live Swipe Pill */
+/* #8 Tinted Icon Glow & Live Swipe Pill */
 .drow .ico.t-out{background:var(--red-soft);box-shadow:inset 0 0 0 1px rgba(225,29,72,.12)}
 .drow .ico.t-in{background:var(--green-soft);box-shadow:inset 0 0 0 1px rgba(22,163,74,.14)}
 .drow .ico.t-trf{background:var(--blue-soft);box-shadow:inset 0 0 0 1px rgba(2,132,199,.14)}
-
-@keyframes rowRise{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
-#recentTx .drow{animation:rowRise .26s var(--ease-out) backwards}
-#recentTx .drow:nth-child(2),.wcard:nth-child(2){animation-delay:20ms}
-#recentTx .drow:nth-child(3),.wcard:nth-child(3){animation-delay:40ms}
-.wcard:nth-child(4){animation-delay:60ms}
-.wcard:nth-child(5){animation-delay:80ms}
 
 #swipePill{
   position:fixed;top:calc(68px + var(--sat));left:50%;transform:translateX(-50%) scale(.88);
@@ -3616,7 +3601,6 @@ function maybeRestoreViewRecovery(){
     if($('tOut')) $('tOut').className = type==='Pengeluaran' ? 'on out' : '';
     if($('tIn')) $('tIn').className = type==='Pemasukan' ? 'on in' : '';
     if($('tTrf')) $('tTrf').className = type==='Transfer' ? 'on trf' : '';
-    renderForm();
     go('add');
   } catch(e) {}
 }
@@ -3625,6 +3609,7 @@ function go(v){
   if(!fabIsLocked()) closeFabMenu();
   if(v !== 'list' && typeof exitSelectMode === 'function' && selectMode) exitSelectMode();
   saveViewRecovery(v);
+  if(typeof renderActiveView === 'function') renderActiveView(v);
   var prev = _curView;
   _curView = v;
   var dirCls = '';
@@ -3888,21 +3873,45 @@ function render(){
   var hasAsset = (S.portfolio||[]).some(function(p){ return p.total !== 0 || Number(p.target) > 0; });
   $('portEmpty').style.display = hasAsset ? 'none' : 'block';
   $('portGrid').style.display = hasAsset ? '' : 'none';
-  renderHomeWallets();
-  renderReport();
-  renderHomeTopCats();
-  renderCatDetail();
-  renderRecent();
-  renderDays();
-  renderCalendar();
-  renderLaporan();
-  renderWallets();
-  renderBudget();
   if(activeBudgetDetailCat && $('budDetailModal') && $('budDetailModal').classList.contains('open')) renderBudgetDetail();
-  renderEventsPage();
-  renderHabits();
-  if(typeof updateAmtHistoryIndex === 'function') updateAmtHistoryIndex();
-  renderForm();
+  _dirtyViews = { home: true, cats: true, wallet: true, budget: true, list: true, lap: true, add: true };
+  renderActiveView(_curView || 'home');
+  clearTimeout(render._amtIdxT);
+  render._amtIdxT = setTimeout(function(){
+    if(typeof updateAmtHistoryIndex === 'function') updateAmtHistoryIndex();
+  }, 250);
+}
+var _dirtyViews = { home: true, cats: true, wallet: true, budget: true, list: true, lap: true, add: true };
+function renderActiveView(v){
+  if(!S) return;
+  if(v === 'home' && _dirtyViews.home){
+    _dirtyViews.home = false;
+    renderHomeWallets();
+    renderReport();
+    renderHomeTopCats();
+    renderRecent();
+  } else if(v === 'cats' && _dirtyViews.cats){
+    _dirtyViews.cats = false;
+    renderCatDetail();
+  } else if(v === 'wallet' && _dirtyViews.wallet){
+    _dirtyViews.wallet = false;
+    renderWallets();
+  } else if(v === 'budget' && _dirtyViews.budget){
+    _dirtyViews.budget = false;
+    renderBudget();
+    renderEventsPage();
+  } else if(v === 'list' && _dirtyViews.list){
+    _dirtyViews.list = false;
+    renderDays();
+    renderCalendar();
+  } else if(v === 'lap' && _dirtyViews.lap){
+    _dirtyViews.lap = false;
+    renderLaporan();
+  } else if(v === 'add' && _dirtyViews.add){
+    _dirtyViews.add = false;
+    renderHabits();
+    renderForm();
+  }
 }
 
 /* ===== Home: Top 3 Dompet & Week/Month Switcher ===== */
@@ -5378,6 +5387,9 @@ function closeCatModal(){
     document.body.classList.remove('nav-shield');
   }, 380);
   $('catModal').classList.remove('open');
+  setTimeout(function(){
+    if(!$('catModal').classList.contains('open') && $('cmBody')) $('cmBody').innerHTML = '';
+  }, 60);
 }
 function toggleCmManage(){
   cmManageMode = !cmManageMode;
@@ -5559,8 +5571,15 @@ function selectCatItem(cat, sub){
     $('tOut').className = type==='Pengeluaran' ? 'on out' : '';
     $('tIn').className = type==='Pemasukan' ? 'on in' : '';
     $('tTrf').className = type==='Transfer' ? 'on trf' : '';
-    renderForm();
+    if($('fCatIco')) $('fCatIco').textContent = iconOf(pickedCat, type, pickedSub);
+    if($('fCatLbl')) $('fCatLbl').textContent = pickedSub ? (trCat(pickedCat) + ' › ' + trCat(pickedSub)) : trCat(pickedCat);
     if(typeof saveViewRecovery === 'function') saveViewRecovery('add');
+    requestAnimationFrame(function(){
+      if(S){
+        renderForm();
+        if(typeof _dirtyViews !== 'undefined') _dirtyViews.add = false;
+      }
+    });
   }
 }
 
