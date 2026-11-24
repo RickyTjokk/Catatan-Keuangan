@@ -892,6 +892,36 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
 .ev-cur-grid button .cur-f{font-size:18px;line-height:1;display:block}
 .ev-cur-grid button .cur-c{font-size:11px;font-weight:800;letter-spacing:.2px;line-height:1;display:block}
 .ev-cur-grid button.on{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 12px rgba(79,70,229,.25)}
+
+/* ===== UPGRADE #2,#3,#4,#6,#8 ===== */
+#ptrBar{height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:700;color:var(--primary);transition:height .2s ease}
+#ptrBar.show{height:38px}
+.skel{background:linear-gradient(90deg,var(--bg) 25%,rgba(148,163,184,.18) 50%,var(--bg) 75%);background-size:200% 100%;animation:skelSh 1.2s infinite;border-radius:14px}
+@keyframes skelSh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+#skelOverlay{display:none;padding:4px 0}
+#skelOverlay.on{display:block}
+.active-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px;align-items:center}
+.achip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:var(--primary-soft);color:var(--primary);font-size:11.5px;font-weight:700;border:0;cursor:pointer;font-family:inherit}
+.sort-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.sort-seg{display:inline-flex;background:var(--card);border-radius:12px;padding:3px;gap:2px;box-shadow:var(--shadow)}
+.sort-seg button{border:0;background:transparent;color:var(--muted);font-size:11px;font-weight:700;padding:5px 9px;border-radius:9px;cursor:pointer;font-family:inherit}
+.sort-seg button.on{background:var(--primary);color:#fff}
+.duptx{width:100%;min-height:46px;border-radius:14px;border:1.5px solid var(--line);background:var(--bg);color:var(--primary);font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:8px}
+.rec-home-card{display:flex;align-items:center;gap:11px;background:var(--card);border:1px solid rgba(245,158,11,.35);border-radius:16px;padding:11px 13px;margin-bottom:10px;box-shadow:var(--shadow)}
+.rec-home-ico{width:38px;height:38px;border-radius:12px;background:rgba(245,158,11,.14);display:grid;place-items:center;font-size:18px;flex:none}
+.rec-home-mid{flex:1;min-width:0}
+.rec-home-mid b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-home-mid small{display:block;font-size:11px;color:var(--muted);margin-top:1px}
+.rec-pay-btn{border:0;background:var(--primary);color:#fff;padding:7px 12px;border-radius:11px;font-size:11.5px;font-weight:800;font-family:inherit;cursor:pointer;flex:none}
+#recModal{position:fixed;left:0;right:0;bottom:0;z-index:26;max-width:540px;margin:0 auto;background:var(--card);border-radius:24px 24px 0 0;padding:16px 18px calc(22px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .26s cubic-bezier(.22,1,.36,1);max-height:90dvh;overflow-y:auto}
+#recModal.open{transform:translateY(0)}
+#recBg{position:fixed;inset:0;z-index:25;background:rgba(15,23,42,.45);opacity:0;pointer-events:none;transition:opacity .2s}
+#recBg.open{opacity:1;pointer-events:auto}
+.trend-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.trend-box{background:var(--bg);border-radius:13px;padding:9px 8px;text-align:center}
+.trend-box small{display:block;font-size:10.5px;color:var(--muted);font-weight:700}
+.trend-box b{display:block;font-size:12.5px;margin-top:3px}
+.trend-box span{display:block;font-size:10.5px;font-weight:700;margin-top:2px}
 </style>
 </head>
 <body>
@@ -920,6 +950,12 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
     <span id="offlineBarTxt">📶 Offline · 0 transaksi menunggu sync</span>
     <button type="button" onclick="syncOfflineQueue(true)">Sync</button>
   </div>
+  <div id="ptrBar">🔄 Tarik untuk menyegarkan…</div>
+  <div id="skelOverlay">
+    <div class="skel" style="height:128px;margin-bottom:12px"></div>
+    <div class="skel" style="height:82px;margin-bottom:12px"></div>
+    <div class="skel" style="height:150px"></div>
+  </div>
 
   <!-- RINGKASAN -->
   <section class="view on" id="v-home">
@@ -940,6 +976,7 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
       <div class="meta" id="hMeta"></div>
     </div>
     <div id="homeBudgetAlerts"></div>
+    <div id="homeRecurringAlerts"></div>
     <div id="homeActiveEvents"></div>
     <div class="card port-card" id="portCard">
       <div class="port-hdr" onclick="this.parentElement.classList.toggle('open')" role="button" tabindex="0">
@@ -1018,33 +1055,49 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
       <button type="button" id="btnLapBack" class="backbtn" onclick="go('list')">‹ Kembali</button>
       <span id="lapMonth" style="font-size:13px;color:var(--muted);font-weight:600"></span>
     </div>
-    <div class="lap-act-bar">
-      <button type="button" id="btnLapPdf" onclick="exportMonthlyPdf()">🖨️ Cetak / PDF</button>
-      <button type="button" id="btnLapExcel" onclick="exportToExcel()">📥 Export Excel</button>
+    <div class="bud-seg">
+      <button type="button" id="segLapMonBtn" class="on" onclick="setLapTab('monthly')">📊 Bulan Ini</button>
+      <button type="button" id="segLapTrdBtn" onclick="setLapTab('trend3')">📈 Tren 3 Bulan</button>
     </div>
-    <div class="stat2">
-      <div class="sbox"><small id="lapLblIn">Total Masuk</small><b id="lapIn" style="color:var(--green)">Rp 0</b></div>
-      <div class="sbox"><small id="lapLblOut">Total Keluar</small><b id="lapOut" style="color:var(--red)">Rp 0</b></div>
-    </div>
-    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
-      <span id="lapLblNet" style="font-size:13px;color:var(--muted);font-weight:600">Selisih bulan ini</span>
-      <b id="lapNet" style="font-size:17px">Rp 0</b>
-    </div>
-    <div class="card ai-adv-card">
-      <div class="ai-adv-head">
-        <h3 style="margin:0">✨ AI Financial Advisor</h3>
-        <button type="button" class="ai-adv-btn" id="aiAdvBtn" onclick="runAiMonthlyReview()">Analisa Bulan Ini</button>
+    <div id="lapTabMonthly">
+      <div class="lap-act-bar">
+        <button type="button" id="btnLapPdf" onclick="exportMonthlyPdf()">🖨️ Cetak / PDF</button>
+        <button type="button" id="btnLapExcel" onclick="exportToExcel()">📥 Export Excel</button>
       </div>
-      <div id="aiAdvBody" style="font-size:12.5px;color:var(--muted);line-height:1.45">
-        Ketuk <b>Analisa Bulan Ini</b> untuk mendapatkan skor kesehatan keuangan, temuan pos boros, dan saran hemat dari Gemini AI.
+      <div class="stat2">
+        <div class="sbox"><small id="lapLblIn">Total Masuk</small><b id="lapIn" style="color:var(--green)">Rp 0</b></div>
+        <div class="sbox"><small id="lapLblOut">Total Keluar</small><b id="lapOut" style="color:var(--red)">Rp 0</b></div>
+      </div>
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+        <span id="lapLblNet" style="font-size:13px;color:var(--muted);font-weight:600">Selisih bulan ini</span>
+        <b id="lapNet" style="font-size:17px">Rp 0</b>
+      </div>
+      <div class="card ai-adv-card">
+        <div class="ai-adv-head">
+          <h3 style="margin:0">✨ AI Financial Advisor</h3>
+          <button type="button" class="ai-adv-btn" id="aiAdvBtn" onclick="runAiMonthlyReview()">Analisa Bulan Ini</button>
+        </div>
+        <div id="aiAdvBody" style="font-size:12.5px;color:var(--muted);line-height:1.45">
+          Ketuk <b>Analisa Bulan Ini</b> untuk mendapatkan skor kesehatan keuangan, temuan pos boros, dan saran hemat dari Gemini AI.
+        </div>
+      </div>
+      <div class="card">
+        <h3 id="lapDonutTitle">🍩 Proporsi Pengeluaran (Ketuk Irisan)</h3>
+        <div id="lapDonutBox"></div>
+      </div>
+      <div class="card"><h3 id="lapTitleIn">📥 Pemasukan per kategori</h3><div id="lapInList"></div></div>
+      <div class="card"><h3 id="lapTitleOut">📤 Pengeluaran per kategori</h3><div id="lapOutList"></div></div>
+    </div>
+    <div id="lapTabTrend3" style="display:none">
+      <div class="card">
+        <h3 id="lblTrend3Title">📈 Pemasukan vs Pengeluaran (3 Bulan)</h3>
+        <div id="trend3ChartBox"></div>
+      </div>
+      <div class="card">
+        <h3 id="lblTrend3SaveTitle">💰 Ringkasan &amp; Saving Rate</h3>
+        <div id="trend3CardsBox"></div>
       </div>
     </div>
-    <div class="card">
-      <h3 id="lapDonutTitle">🍩 Proporsi Pengeluaran (Ketuk Irisan)</h3>
-      <div id="lapDonutBox"></div>
-    </div>
-    <div class="card"><h3 id="lapTitleIn">📥 Pemasukan per kategori</h3><div id="lapInList"></div></div>
-    <div class="card"><h3 id="lapTitleOut">📤 Pengeluaran per kategori</h3><div id="lapOutList"></div></div>
   </section>
   
   <!-- DOMPET -->
@@ -1261,7 +1314,15 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
           <span class="fbtn-badge" id="fBadgeCount">0</span>
         </button>
       </div>
-      <div class="fmeta" id="fMeta"></div>
+      <div id="activeFilterChips" class="active-chips" style="display:none"></div>
+      <div class="sort-row">
+        <div class="fmeta" id="fMeta" style="margin:0"></div>
+        <div class="sort-seg" id="sortSeg">
+          <button type="button" class="on" data-s="newest" onclick="setListSort('newest')">Terbaru</button>
+          <button type="button" data-s="highest" onclick="setListSort('highest')">Terbesar</button>
+          <button type="button" data-s="lowest" onclick="setListSort('lowest')">Terkecil</button>
+        </div>
+      </div>
     </div>
     <div id="list"></div>
   </section>
@@ -1361,11 +1422,19 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
       </div>
       <span class="chev">›</span>
     </button>
-    <button type="button" class="catbtn" onclick="openEventsFromProfile()">
+    <button type="button" class="catbtn" style="margin-bottom:8px" onclick="openEventsFromProfile()">
       <div class="ico">✈️</div>
       <div class="cmid">
         <b id="profEvTitle">Event &amp; Trip</b>
         <small id="profEvSub">Catat liburan, acara khusus &amp; kurs mata uang asing</small>
+      </div>
+      <span class="chev">›</span>
+    </button>
+    <button type="button" class="catbtn" onclick="openRecModalFromProfile()">
+      <div class="ico">🔁</div>
+      <div class="cmid">
+        <b id="profRecTitle">Tagihan &amp; Transaksi Rutin</b>
+        <small id="profRecSub">Pengingat jatuh tempo &amp; catat tagihan 1-tap</small>
       </div>
       <span class="chev">›</span>
     </button>
@@ -1570,6 +1639,7 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
     </div>
   </div>
   <button class="primary" id="eSave" onclick="saveEdit()">Simpan perubahan</button>
+  <button type="button" class="duptx" id="eDupBtn" onclick="duplicateEditTx()">📋 Duplikat ke Hari Ini</button>
   <button class="deltx" onclick="delEdit()">🗑 Hapus transaksi</button>
 </div>
 
@@ -1627,6 +1697,36 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
     <button type="button" class="link" onclick="closeEvDetail()">Tutup</button>
   </div>
   <div id="evDetBody"></div>
+</div>
+
+<!-- MODAL TAGIHAN & TRANSAKSI RUTIN -->
+<div id="recBg" onclick="closeRecModal()"></div>
+<div id="recModal" role="dialog" aria-label="Tagihan dan Transaksi Rutin">
+  <div class="ehead">
+    <b id="recModalTitle">🔁 Tagihan &amp; Transaksi Rutin</b>
+    <button type="button" class="link" id="recCloseBtn" onclick="closeRecModal()">Tutup</button>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <h3 id="recAddTitle" style="margin-bottom:8px">+ Tambah Tagihan / Rutin</h3>
+    <div class="seg" style="margin-bottom:8px">
+      <button type="button" id="recTpOut" class="on out" onclick="setRecType('Pengeluaran')">Pengeluaran</button>
+      <button type="button" id="recTpIn" onclick="setRecType('Pemasukan')">Pemasukan</button>
+    </div>
+    <label class="field"><span id="recNameLbl">Nama (mis. Internet, Listrik, Gaji)</span><input id="recNameIn" maxlength="40" placeholder="mis. Internet Biznet"></label>
+    <div class="add-row2">
+      <label class="field"><span id="recAmtLbl">Nominal (Rp)</span><input id="recAmtIn" type="number" min="1" placeholder="mis. 350000"></label>
+      <label class="field"><span id="recDayLbl">Tgl Jatuh Tempo (1-31)</span><input id="recDayIn" type="number" min="1" max="31" value="1"></label>
+    </div>
+    <div class="add-row2">
+      <label class="field"><span id="recCatLbl">Kategori</span><select id="recCatIn"></select></label>
+      <label class="field"><span id="recWalLbl">Dompet</span><select id="recWalIn"></select></label>
+    </div>
+    <button type="button" class="primary" id="recSaveBtn" onclick="saveRecForm()">Simpan Rutin</button>
+  </div>
+  <div class="card">
+    <h3 id="recListTitle" style="margin-bottom:8px">Daftar Rutin Bulanan</h3>
+    <div id="recListBox"></div>
+  </div>
 </div>
 
 <!-- KEYPAD KALKULATOR -->
@@ -2297,6 +2397,24 @@ function applyLang(){
   if($('profCatSub')) $('profCatSub').textContent = en ? 'Add, delete & drag to reorder categories' : 'Tambah, hapus & seret urutan kategori / sub-kategori';
   if($('profEvTitle')) $('profEvTitle').textContent = en ? 'Events & Trips' : 'Event & Trip';
   if($('profEvSub')) $('profEvSub').textContent = en ? 'Track holidays, special events & foreign currencies' : 'Catat liburan, acara khusus & kurs mata uang asing';
+  if($('profRecTitle')) $('profRecTitle').textContent = en ? 'Recurring & Bills' : 'Tagihan & Transaksi Rutin';
+  if($('profRecSub')) $('profRecSub').textContent = en ? 'Due reminders & 1-tap bill logging' : 'Pengingat jatuh tempo & catat tagihan 1-tap';
+  if($('segLapMonBtn')) $('segLapMonBtn').textContent = en ? '📊 This Month' : '📊 Bulan Ini';
+  if($('segLapTrdBtn')) $('segLapTrdBtn').textContent = en ? '📈 3-Mo Trend' : '📈 Tren 3 Bulan';
+  if($('lblTrend3Title')) $('lblTrend3Title').textContent = en ? '📈 Income vs Expense (3 Months)' : '📈 Pemasukan vs Pengeluaran (3 Bulan)';
+  if($('lblTrend3SaveTitle')) $('lblTrend3SaveTitle').textContent = en ? '💰 Summary & Saving Rate' : '💰 Ringkasan & Saving Rate';
+  if($('eDupBtn')) $('eDupBtn').textContent = en ? '📋 Duplicate to Today' : '📋 Duplikat ke Hari Ini';
+  document.querySelectorAll('#sortSeg button').forEach(function(b){
+    var m = { newest: en ? 'Newest' : 'Terbaru', highest: en ? 'Highest' : 'Terbesar', lowest: en ? 'Lowest' : 'Terkecil' };
+    if(m[b.dataset.s]) b.textContent = m[b.dataset.s];
+  });
+  if($('recModalTitle')) $('recModalTitle').textContent = en ? '🔁 Recurring & Bills' : '🔁 Tagihan & Transaksi Rutin';
+  if($('recCloseBtn')) $('recCloseBtn').textContent = dict.close;
+  if($('recAddTitle')) $('recAddTitle').textContent = en ? '+ Add Recurring / Bill' : '+ Tambah Tagihan / Rutin';
+  if($('recTpOut')) $('recTpOut').textContent = dict.fOut;
+  if($('recTpIn')) $('recTpIn').textContent = dict.fIn;
+  if($('recSaveBtn') && !$('recSaveBtn').disabled) $('recSaveBtn').textContent = en ? 'Save Recurring' : 'Simpan Rutin';
+  if($('recListTitle')) $('recListTitle').textContent = en ? 'Monthly Recurring List' : 'Daftar Rutin Bulanan';
 
   if($('btnLapBack')) $('btnLapBack').textContent = dict.catBack;
   if($('btnLapPdf')) $('btnLapPdf').textContent = en ? '🖨️ Print / PDF' : '🖨️ Cetak / PDF';
@@ -2558,6 +2676,7 @@ function readCache(ym){
 function commitData(d){
   S = d;
   saveCache(d);
+  if($('skelOverlay')) $('skelOverlay').classList.remove('on');
   try { render(); } catch(e) { console.error(e); toast('Gagal menampilkan data'); }
 }
 var API_URL = 'https://script.google.com/macros/s/AKfycbzUJt7RW-3ifOVorkv8oPYGLyE5ez-VyOxwK543VpM8DYG1MsqYtC6TYceIQDlTGYI9eA/exec';
@@ -2594,11 +2713,13 @@ function load(ym){
   var cached = readCache(targetYm);
   if(cached){
     S = cached;
+    if($('skelOverlay')) $('skelOverlay').classList.remove('on');
     try { render(); } catch(e) { console.error(e); S = null; }
     $('loader').classList.add('off');
     setSyncing(true, 'Menyegarkan…');
   } else {
     if(!S) $('loader').classList.remove('off');
+    else if($('skelOverlay')) $('skelOverlay').classList.add('on');
     setSyncing(true, 'Memuat…');
   }
   return call('getData', ym || null)
@@ -2612,6 +2733,7 @@ function load(ym){
     })
     .catch(function(e){
       if(seq !== activeLoadSeq) return;
+      if($('skelOverlay')) $('skelOverlay').classList.remove('on');
       $('loader').classList.add('off');
       setSyncing(false);
       if(!S) $('loadErr').style.display = 'grid';
@@ -2927,6 +3049,7 @@ function render(){
     $('hMeta').textContent = parts.join(' · ');
   }
   renderBudgetAlerts();
+  if(typeof renderHomeRecurringAlerts === 'function') renderHomeRecurringAlerts();
   renderHomeActiveEvents();
   $('portTot').textContent = mk(rp(S.totalAsset));
   $('portGrid').innerHTML = (S.portfolio||[]).map(function(p){
@@ -3606,7 +3729,13 @@ function applyVoiceResult(res){
   pickedSub = res.sub || null;
   if(res.wallet) pickedWallet = res.wallet;
   if(res.walletTo) pickedWalletTo = res.walletTo;
-  if($('fAmt')) $('fAmt').value = res.amount > 0 ? num(res.amount) : '';
+  if(res.eventId) pickedEventId = res.eventId;
+  if(res.currency && res.currency !== 'IDR' && res.fxAmount > 0){
+    pickedFxRate = Number(res.rate) || 1;
+    if($('fAmt')) $('fAmt').value = num(res.fxAmount);
+  } else if($('fAmt')){
+    $('fAmt').value = res.amount > 0 ? num(res.amount) : '';
+  }
   if($('fDate') && res.date) $('fDate').value = res.date;
   if($('fNote')) $('fNote').value = res.note || '';
   if(typeof renderForm === 'function') renderForm();
@@ -3665,6 +3794,7 @@ function onReceiptPicked(input){
           type = res.type || 'Pengeluaran';
           pickedWallet = res.wallet || 'Cash';
           pickedWalletTo = res.walletTo || null;
+          if(res.eventId) pickedEventId = res.eventId;
 
           $('tOut').className = type==='Pengeluaran' ? 'on out' : '';
           $('tIn').className = type==='Pemasukan' ? 'on in' : '';
@@ -3692,7 +3822,12 @@ function onReceiptPicked(input){
             splitItems = [];
             pickedCat = res.cat || null;
             pickedSub = fixSub(type, pickedCat, res.sub || null);
-            if(res.amount > 0) $('fAmt').value = num(res.amount);
+            if(res.currency && res.currency !== 'IDR' && res.fxAmount > 0){
+              pickedFxRate = Number(res.rate) || 1;
+              $('fAmt').value = num(res.fxAmount);
+            } else if(res.amount > 0){
+              $('fAmt').value = num(res.amount);
+            }
             if(res.note) $('fNote').value = res.note;
             $('splitBox').classList.remove('on');
             $('singleEntryCard').style.display = '';
@@ -4788,8 +4923,39 @@ function dayLabel(d){
   if(diff===1) return APP_LANG === 'en' ? 'Yesterday' : 'Kemarin';
   return HARI[new Date(q[0],q[1]-1,q[2]).getDay()];
 }
+var listSort = 'newest';
+function setListSort(s){
+  listSort = s || 'newest';
+  document.querySelectorAll('#sortSeg button').forEach(function(b){ b.classList.toggle('on', b.dataset.s === listSort); });
+  renderDays();
+}
+function clearSingleFilter(kind){
+  if(kind === 'allMonths'){ listAllMonths = false; crossMonthTxs = []; }
+  else if(kind === 'type') listFilterType = 'Semua';
+  else if(kind === 'wallet') listFilterWallet = 'Semua';
+  else if(kind === 'event') listFilterEvent = 'Semua';
+  updateFilterBadge();
+  if(listAllMonths) fetchCrossMonth(); else renderDays();
+}
+function renderActiveFilterChips(){
+  var box = $('activeFilterChips');
+  if(!box) return;
+  var en = APP_LANG === 'en';
+  var chips = [];
+  if(listAllMonths) chips.push('<button type="button" class="achip" onclick="clearSingleFilter(\'allMonths\')">'+(en?'🌐 All Months':'🌐 Semua Bulan')+' ✕</button>');
+  if(listFilterType !== 'Semua') chips.push('<button type="button" class="achip" onclick="clearSingleFilter(\'type\')">'+esc(trCat(listFilterType))+' ✕</button>');
+  if(listFilterWallet !== 'Semua') chips.push('<button type="button" class="achip" onclick="clearSingleFilter(\'wallet\')">💳 '+esc(listFilterWallet)+' ✕</button>');
+  if(listFilterEvent !== 'Semua'){
+    var ev = findEventById(listFilterEvent);
+    var lbl = listFilterEvent === '__NONE__' ? (en?'No Event':'Tanpa Event') : (ev ? (ev.icon+' '+ev.name) : listFilterEvent);
+    chips.push('<button type="button" class="achip" onclick="clearSingleFilter(\'event\')">'+esc(lbl)+' ✕</button>');
+  }
+  box.style.display = chips.length ? 'flex' : 'none';
+  box.innerHTML = chips.join('');
+}
 function renderDays(){
   updateFilterBadge();
+  renderActiveFilterChips();
   $('lFreeCash').textContent = mk(rp(S.freeCash));
   $('lFreeSub').innerHTML = hide ? (APP_LANG === 'en' ? 'Hidden' : 'Disembunyikan') : (APP_LANG === 'en' ? 'Excl. assets<br>&amp; emergency fund' : 'Di luar aset<br>&amp; dana darurat');
   var q = $('fSearch').value.trim().toLowerCase();
@@ -4832,6 +4998,26 @@ function renderDays(){
     if(sumOut > 0) metaParts.push((APP_LANG === 'en' ? 'Out -' : 'Keluar -') + short(sumOut));
   }
   $('fMeta').textContent = metaParts.join(' · ');
+
+  if(listSort !== 'newest'){
+    var sorted = filtered.slice().sort(function(a, b){
+      return listSort === 'highest' ? (b.amount - a.amount) : (a.amount - b.amount);
+    });
+    var rowsFlat = sorted.map(function(t){
+      var isTrf = t.type==='Transfer', isIn = t.type==='Pemasukan';
+      var cls = isTrf ? 'trf' : (isIn ? 'in' : 'out');
+      var sign = isTrf ? (isWithdraw(t.sub) ? '⬅ ' : '➡ ') : (isIn ? '+' : '-');
+      var title = esc(trCat(t.cat)) + (t.sub ? ' · ' + esc(trCat(t.sub)) : '');
+      var subText = esc(t.date) + ' · ' + esc(walletLbl(t)) + (t.note ? ' · ' + esc(t.note) : '');
+      var evTag = txEventBadgeHtml(t);
+      return '<div class="drow" onclick="openEdit(\''+esc(t.id)+'\')">'+
+        '<div class="ico">'+iconOf(t.cat, t.type, t.sub)+'</div>'+
+        '<div class="mid"><b>'+title+'</b><small>'+subText+'</small>'+evTag+'</div>'+
+        '<div class="amt '+cls+'">'+sign+mk(rp(t.amount))+'</div></div>';
+    }).join('');
+    $('list').innerHTML = '<div class="dcard">'+rowsFlat+'</div>';
+    return;
+  }
 
   var g={}, order=[];
   filtered.forEach(function(t){ if(!g[t.date]){g[t.date]=[];order.push(t.date);} g[t.date].push(t); });
@@ -5646,6 +5832,170 @@ window.addEventListener('offline', function(){ renderOfflineBar(); });
     var dy = e.changedTouches[0].clientY - sy;
     if(Math.abs(dx) > 75 && Math.abs(dx) > Math.abs(dy) * 1.8){
       if(dx < 0) shift(1); else shift(-1);
+    }
+  }, { passive: true });
+})();
+
+/* Inisialisasi Tema, Bahasa, Ikon PNG iOS & Muat Data */
+applyTheme(APP_THEME);
+applyLang();
+renderOfflineBar();
+syncOfflineQueue(false);
+
+load();
+</script>
+</body>
+</html>
+urn '<div class="trend-box">'+
+      '<small>'+esc(mLbl)+'</small>'+
+      '<b style="color:'+clr+'">'+mk((it.saving>=0?'+':'-')+short(Math.abs(it.saving)))+'</b>'+
+      '<span style="color:var(--muted)">Rate: '+it.rate+'%</span>'+
+    '</div>';
+  }).join('') + '</div>';
+}
+
+/* ===== #8 TRANSAKSI BERULANG & PENGINGAT TAGIHAN ===== */
+var recFormType = 'Pengeluaran';
+function renderHomeRecurringAlerts(){
+  var box = $('homeRecurringAlerts');
+  if(!box || !S) return;
+  var list = (S.recurring || []).filter(function(r){ return r.lastPaidYm !== S.ym; });
+  if(!list.length){ box.innerHTML = ''; return; }
+  var todayDay = Number((S.today || '').slice(8, 10)) || 1;
+  var due = list.filter(function(r){ return S.ym !== (S.today || '').slice(0, 7) || (r.day - todayDay) <= 5; });
+  if(!due.length){ box.innerHTML = ''; return; }
+  var en = APP_LANG === 'en';
+  box.innerHTML = due.slice(0, 3).map(function(r){
+    var isOver = S.ym === (S.today || '').slice(0, 7) && todayDay > r.day;
+    var statusTxt = isOver ? (en ? 'Overdue (day '+r.day+')' : 'Lewat jatuh tempo (tgl '+r.day+')') : (en ? 'Due day '+r.day : 'Jatuh tempo tgl '+r.day);
+    return '<div class="rec-home-card">'+
+      '<div class="rec-home-ico">'+(r.type==='Pemasukan'?'💰':'🔔')+'</div>'+
+      '<div class="rec-home-mid"><b>'+esc(r.name)+' · '+mk(rp(r.amount))+'</b><small>'+esc(statusTxt)+' · '+esc(r.wallet)+'</small></div>'+
+      '<button type="button" class="rec-pay-btn" onclick="payRecurringUi(\''+esc(r.id)+'\')">'+(en?'Log 1-Tap':'Catat 1-Tap')+'</button>'+
+    '</div>';
+  }).join('');
+}
+function openRecModalFromProfile(){
+  closeProfileModal();
+  setRecType('Pengeluaran');
+  populateRecSelects();
+  renderRecList();
+  $('recBg').classList.add('open');
+  $('recModal').classList.add('open');
+}
+function closeRecModal(){
+  $('recBg').classList.remove('open');
+  $('recModal').classList.remove('open');
+}
+function setRecType(tp){
+  recFormType = tp === 'Pemasukan' ? 'Pemasukan' : 'Pengeluaran';
+  if($('recTpOut')) $('recTpOut').className = recFormType === 'Pengeluaran' ? 'on out' : '';
+  if($('recTpIn')) $('recTpIn').className = recFormType === 'Pemasukan' ? 'on in' : '';
+  populateRecSelects();
+}
+function populateRecSelects(){
+  if(!S) return;
+  var cats = (S.kategori && S.kategori[typeKey(recFormType)]) || [];
+  if($('recCatIn')) $('recCatIn').innerHTML = cats.map(function(c){ return '<option value="'+esc(c.n)+'">'+c.i+' '+esc(trCat(c.n))+'</option>'; }).join('');
+  var ws = S.dompet || [];
+  if($('recWalIn')) $('recWalIn').innerHTML = ws.map(function(w){ return '<option value="'+esc(w.n)+'">'+w.i+' '+esc(w.n)+'</option>'; }).join('');
+}
+function renderRecList(){
+  var box = $('recListBox');
+  if(!box || !S) return;
+  var list = S.recurring || [];
+  if(!list.length){
+    box.innerHTML = '<div class="empty" style="padding:16px">Belum ada tagihan atau transaksi rutin.</div>';
+    return;
+  }
+  box.innerHTML = list.map(function(r){
+    var paid = r.lastPaidYm === S.ym;
+    return '<div class="drow">'+
+      '<div class="ico">'+iconOf(r.cat, r.type, r.sub)+'</div>'+
+      '<div class="mid"><b>'+esc(r.name)+'</b><small>Tgl '+r.day+' · '+esc(r.wallet)+' · '+mk(rp(r.amount))+(paid?' · ✅ Sudah bulan ini':'')+'</small></div>'+
+      '<div style="display:flex;gap:6px;align-items:center">'+
+        (!paid ? '<button type="button" class="rec-pay-btn" onclick="payRecurringUi(\''+esc(r.id)+'\')">Catat</button>' : '')+
+        '<button type="button" class="link" style="color:var(--red)" onclick="deleteRecurringUi(\''+esc(r.id)+'\')">🗑</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+function saveRecForm(){
+  var name = $('recNameIn').value.trim();
+  var amt = Math.round(Number($('recAmtIn').value) || 0);
+  var day = Math.min(31, Math.max(1, Math.round(Number($('recDayIn').value) || 1)));
+  if(!name){ toast('Isi nama tagihan/rutin dulu'); return; }
+  if(amt <= 0){ toast('Nominal harus lebih dari 0'); return; }
+  var btn = $('recSaveBtn'); btn.disabled = true; btn.textContent = 'Menyimpan…';
+  setSyncing(true, 'Menyimpan…');
+  call('saveRecurring', {
+    name: name, type: recFormType, cat: $('recCatIn').value, sub: '',
+    amount: amt, wallet: $('recWalIn').value, day: day, note: name
+  }, S.ym)
+    .then(function(d){
+      commitData(d);
+      $('recNameIn').value = '';
+      $('recAmtIn').value = '';
+      renderRecList();
+      setSyncing(false);
+      toast('Tagihan rutin tersimpan ✅');
+    })
+    .catch(function(e){ setSyncing(false); toast('Gagal: ' + (e.message || e)); })
+    .then(function(){ btn.disabled = false; btn.textContent = APP_LANG === 'en' ? 'Save Recurring' : 'Simpan Rutin'; });
+}
+function payRecurringUi(id){
+  setSyncing(true, 'Mencatat…');
+  call('payRecurring', id, S.ym)
+    .then(function(d){
+      commitData(d);
+      renderRecList();
+      setSyncing(false);
+      toast('Berhasil dicatat ✅');
+    })
+    .catch(function(e){ setSyncing(false); toast('Gagal: ' + (e.message || e)); });
+}
+function deleteRecurringUi(id){
+  setSyncing(true, 'Menghapus…');
+  call('deleteRecurring', id, S.ym)
+    .then(function(d){
+      commitData(d);
+      renderRecList();
+      setSyncing(false);
+      toast('Dihapus 🗑');
+    })
+    .catch(function(e){ setSyncing(false); toast('Gagal: ' + (e.message || e)); });
+}
+
+/* ===== #2 PULL-TO-REFRESH ===== */
+(function initPullToRefresh(){
+  var startY = 0, pulling = false, ready = false;
+  document.addEventListener('touchstart', function(e){
+    if(window.scrollY > 4 || !e.touches || e.touches.length !== 1) return;
+    if(document.querySelector('#edit.open,#pad.open,#evModal.open,#evDetailModal.open,#filterModal.open,#profModal.open,#catModal.open,#recModal.open')) return;
+    startY = e.touches[0].clientY;
+    pulling = true; ready = false;
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e){
+    if(!pulling || !e.touches || !e.touches.length) return;
+    var dy = e.touches[0].clientY - startY;
+    var bar = $('ptrBar');
+    if(!bar) return;
+    if(dy > 45 && window.scrollY <= 4){
+      bar.classList.add('show');
+      if(dy > 85){ ready = true; bar.textContent = '✨ Lepas untuk menyegarkan…'; }
+      else { ready = false; bar.textContent = '🔄 Tarik untuk menyegarkan…'; }
+    } else if(dy <= 10){
+      bar.classList.remove('show');
+    }
+  }, { passive: true });
+  document.addEventListener('touchend', function(){
+    if(!pulling) return;
+    pulling = false;
+    var bar = $('ptrBar');
+    if(bar) bar.classList.remove('show');
+    if(ready && S){
+      ready = false;
+      load(S.ym);
     }
   }, { passive: true });
 })();

@@ -160,7 +160,13 @@ function ensureSheets_() {
     evSh.appendRow(['ID', 'Nama', 'Ikon', 'MataUang', 'Kurs', 'Budget', 'TglMulai', 'TglSelesai', 'Status', 'KecualiReport']);
     evSh.getRange(1, 1, 1, 10).setFontWeight('bold');
   }
-  return { ss: ss, txSh: txSh, budSh: budSh, saSh: saSh, dompetSh: dompetSh, katSh: katSh, tgSh: tgSh, evSh: evSh };
+  var recSh = findSheetByNames_(ss, ['Recurring', 'TagihanRutin', 'Berulang']);
+  if (!recSh) {
+    recSh = ss.insertSheet('Recurring');
+    recSh.appendRow(['ID', 'Nama', 'Tipe', 'Kategori', 'SubKategori', 'Jumlah', 'Dompet', 'TanggalTagih', 'Catatan', 'Aktif', 'TerakhirCatat']);
+    recSh.getRange(1, 1, 1, 11).setFontWeight('bold');
+  }
+  return { ss: ss, txSh: txSh, budSh: budSh, saSh: saSh, dompetSh: dompetSh, katSh: katSh, tgSh: tgSh, evSh: evSh, recSh: recSh };
 }
 
 function ensureTxEventCols_(sh) {
@@ -517,6 +523,30 @@ function getData(ym) {
     });
   }
 
+  // 2d. Baca Recurring / Tagihan Rutin
+  var recurringList = [];
+  var recLast = env.recSh.getLastRow();
+  if (recLast > 1) {
+    env.recSh.getRange(2, 1, recLast - 1, 11).getValues().forEach(function(r) {
+      var rid = String(r[0] || '').trim();
+      var rName = String(r[1] || '').trim();
+      var aktif = String(r[9] || 'YA').trim().toUpperCase();
+      if (!rid || !rName || aktif === 'TIDAK') return;
+      recurringList.push({
+        id: rid,
+        name: rName,
+        type: String(r[2] || 'Pengeluaran').trim() || 'Pengeluaran',
+        cat: String(r[3] || 'Tagihan').trim() || 'Tagihan',
+        sub: String(r[4] || '').trim(),
+        amount: parseAmount_(r[5]),
+        wallet: String(r[6] || 'Cash').trim() || 'Cash',
+        day: Math.min(31, Math.max(1, Math.round(Number(r[7]) || 1))),
+        note: String(r[8] || '').trim(),
+        lastPaidYm: normYm_(r[10])
+      });
+    });
+  }
+
   // 3. Baca Transaksi
   var tCol = txCols_(env.txSh);
   var txLastRow = env.txSh.getLastRow();
@@ -531,6 +561,9 @@ function getData(ym) {
   var prev3 = [prevYm_(targetYm, 1), prevYm_(targetYm, 2), prevYm_(targetYm, 3)];
   var prevDaily = {};
   prev3.forEach(function(p) { prevDaily[p] = {}; });
+  var trendMonths = [prevYm_(targetYm, 2), prevYm_(targetYm, 1), targetYm];
+  var trendMap = {};
+  trendMonths.forEach(function(m) { trendMap[m] = { ym: m, income: 0, expense: 0 }; });
   var curDaily = {};
 
   tRows.forEach(function(r, rowIdx) {
@@ -546,6 +579,11 @@ function getData(ym) {
     var wTo = String(r[tCol.walletTo] || '').trim();
     var note = String(r[tCol.note] || '').trim();
     if (!amt && !cat) return;
+
+    if (trendMap[rowYm]) {
+      if (tp === 'Pemasukan') trendMap[rowYm].income += amt;
+      else if (tp === 'Pengeluaran') trendMap[rowYm].expense += amt;
+    }
 
     var evId = String(r[tCol.eventId] || '').trim();
     var curCode = String(r[tCol.currency] || '').trim().toUpperCase();
@@ -733,6 +771,12 @@ function getData(ym) {
     dompet: dompetCfg,
     kategori: katCfg,
     events: eventsList,
+    recurring: recurringList,
+    trend3: trendMonths.map(function(m) {
+      var o = trendMap[m];
+      var sv = o.income - o.expense;
+      return { ym: m, income: o.income, expense: o.expense, saving: sv, rate: o.income > 0 ? Math.round((sv / o.income) * 100) : 0 };
+    }),
     report: {
       days: daysInMonth,
       cur: currentArr,
@@ -1473,7 +1517,26 @@ function tesSisaScan() {
   Logger.log('Terpakai hari ini: ' + scanUsedToday_() + ' dari ' + SCAN_LIMIT_PER_DAY);
 }
 
-/* ===== SMART SCAN STRUK & BUKTI TRANSFER (Gemini + Auto-Split Multi-Kategori) ===== */
+function readActiveEventsHelper_(evSh) {
+  var out = [];
+  var last = evSh ? evSh.getLastRow() : 0;
+  if (last <= 1) return out;
+  evSh.getRange(2, 1, last - 1, 10).getValues().forEach(function(r) {
+    var id = String(r[0] || '').trim();
+    var name = String(r[1] || '').trim();
+    var status = String(r[8] || 'AKTIF').trim().toUpperCase();
+    if (!id || !name || status === 'SELESAI') return;
+    out.push({
+      id: id,
+      name: name,
+      currency: String(r[3] || 'IDR').trim().toUpperCase() || 'IDR',
+      rate: Number(r[4]) > 0 ? Number(r[4]) : 1
+    });
+  });
+  return out;
+}
+
+/* ===== SMART SCAN STRUK & BUKTI TRANSFER (Gemini + Auto-Split + Valas/Event) ===== */
 function scanReceipt(base64Data, mimeType) {
   var apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
   if (!apiKey) throw new Error('ERR_NO_KEY');
@@ -1483,6 +1546,7 @@ function scanReceipt(base64Data, mimeType) {
   var env = ensureSheets_();
   var dompetList = readDompetList_(env.dompetSh).map(function(d) { return d.n; });
   var katCfg = readKategoriCfg_(env.katSh);
+  var activeEvents = readActiveEventsHelper_(env.evSh);
   var tz = Session.getScriptTimeZone();
   var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
 
@@ -1495,32 +1559,37 @@ function scanReceipt(base64Data, mimeType) {
     return tp + ': ' + items;
   }).join('\n');
 
+  var evListStr = activeEvents.length
+    ? activeEvents.map(function(e) { return e.id + ' (' + e.name + ', ' + e.currency + ')'; }).join('; ')
+    : 'Tidak ada';
+
   var prompt =
     'Kamu adalah asisten pencatat keuangan pribadi. Ekstrak data transaksi dari gambar struk belanja, nota, QRIS, atau bukti transfer m-banking ini.\n' +
     'Tanggal hari ini: ' + today + '\n' +
     'Daftar Dompet tersedia: ' + dompetList.join(', ') + '\n' +
+    'Event Aktif saat ini: ' + evListStr + '\n' +
     'Daftar Kategori & [SubKategori] tersedia:\n' + katListStr + '\n\n' +
     'Aturan wajib:\n' +
     '1. "type": pilih salah satu dari "Pengeluaran", "Pemasukan", atau "Transfer".\n' +
-    '2. "totalAmount": angka total pembayaran bersih akhir di struk (integer tanpa titik/koma, contoh: 37000).\n' +
-    '3. "wallet": pilih nama Dompet yang paling cocok dari daftar dompet (misal BCA, Gopay, Jago, atau "Cash" jika tunai/tidak jelas).\n' +
-    '4. "walletTo": isi nama Dompet tujuan HANYA jika type="Transfer" dan cat="Antar Dompet", selain itu "".\n' +
-    '5. "date": format YYYY-MM-DD dari tanggal di struk; jika tidak terbaca/tidak ada tahun, gunakan "' + today + '".\n' +
-    '6. "items": array berisi kelompok transaksi berdasarkan kategori.\n' +
+    '2. "currency": kode mata uang di struk (default "IDR", atau "JPY", "SGD", "MYR", "THB", "USD", "RMB", "KRW", "AUD", "NTD" jika struk luar negeri).\n' +
+    '3. "eventId": isi ID Event dari daftar Event Aktif jika struk cocok dengan event/mata uang event tersebut, selain itu "".\n' +
+    '4. "totalAmount": angka total pembayaran bersih akhir dalam mata uang di struk (integer, contoh: 37000 atau 1500).\n' +
+    '5. "wallet": pilih nama Dompet yang paling cocok dari daftar dompet (misal BCA, Gopay, Jago, atau "Cash" jika tunai/tidak jelas).\n' +
+    '6. "walletTo": isi nama Dompet tujuan HANYA jika type="Transfer" dan cat="Antar Dompet", selain itu "".\n' +
+    '7. "date": format YYYY-MM-DD dari tanggal di struk; jika tidak terbaca/tidak ada tahun, gunakan "' + today + '".\n' +
+    '8. "items": array berisi kelompok transaksi berdasarkan kategori.\n' +
     '   - Jika semua barang di struk masuk ke 1 kategori/subkategori yang sama (atau ini bukti transfer), cukup buat 1 elemen di dalam "items".\n' +
     '   - Jika dalam 1 struk ada barang dari kategori berbeda (misal snack/minuman dan obat/vitamin, atau makanan dan kebutuhan rumah), PECAH dan gabungkan per (cat + sub) yang sama menjadi beberapa elemen di "items".\n' +
     '   - Distribusikan diskon/voucher/PPN/biaya layanan secara proporsional sehingga jumlah seluruh "amount" di "items" sama persis dengan "totalAmount".\n' +
     '   - Setiap objek di "items" wajib punya:\n' +
     '     * "cat": nama Kategori persis dari daftar di atas.\n' +
     '     * "sub": nama SubKategori persis dari dalam tanda [] kategori tersebut, atau "" jika tidak ada.\n' +
-    '     * "amount": integer nominal kelompok kategori tersebut.\n' +
+    '     * "amount": integer nominal kelompok kategori tersebut dalam mata uang struk.\n' +
     '     * "note": nama merchant/toko singkat + nama item di kelompok ini (maks 50 karakter).\n' +
     'Balas HANYA dengan JSON valid tanpa markdown.';
 
   var models = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite', 'gemini-3.5-flash'];
-
   var res, code = 0, bodyText = '';
-
   for (var i = 0; i < models.length; i++) {
     var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent';
     var payload = {
@@ -1532,7 +1601,6 @@ function scanReceipt(base64Data, mimeType) {
       }],
       generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
     };
-
     res = UrlFetchApp.fetch(url, {
       method: 'post',
       contentType: 'application/json',
@@ -1540,20 +1608,16 @@ function scanReceipt(base64Data, mimeType) {
       payload: JSON.stringify(payload),
       muteHttpExceptions: true
     });
-
     code = res.getResponseCode();
     bodyText = res.getContentText();
-    if (code === 200) break;
-    if (code === 401 || code === 403) break;
+    if (code === 200 || code === 401 || code === 403) break;
   }
 
   if (code !== 200) {
     var errDetail = String(code);
     try {
       var errObj = JSON.parse(bodyText);
-      if (errObj.error && errObj.error.message) {
-        errDetail = code + ' - ' + errObj.error.message.slice(0, 70);
-      }
+      if (errObj.error && errObj.error.message) errDetail = code + ' - ' + errObj.error.message.slice(0, 70);
     } catch (ignore) {}
     throw new Error('ERR_AI_FAIL:' + errDetail);
   }
@@ -1569,9 +1633,7 @@ function scanReceipt(base64Data, mimeType) {
     var cleanJson = text.replace(/```json|```/g, '').trim();
     var firstBrace = cleanJson.indexOf('{');
     var lastBrace = cleanJson.lastIndexOf('}');
-    if (firstBrace >= 0 && lastBrace > firstBrace) {
-      cleanJson = cleanJson.slice(firstBrace, lastBrace + 1);
-    }
+    if (firstBrace >= 0 && lastBrace > firstBrace) cleanJson = cleanJson.slice(firstBrace, lastBrace + 1);
     parsed = JSON.parse(cleanJson);
   } catch (e) {
     throw new Error('ERR_AI_PARSE');
@@ -1584,6 +1646,26 @@ function scanReceipt(base64Data, mimeType) {
   if (dompetList.indexOf(wTo) < 0) wTo = '';
   var dateStr = /^\d{4}-\d{2}-\d{2}$/.test(String(parsed.date || '')) ? parsed.date : today;
   var totalReceipt = Math.max(0, Math.round(Number(parsed.totalAmount || parsed.amount) || 0));
+
+  var curCode = String(parsed.currency || 'IDR').trim().toUpperCase();
+  if (curCode === 'CNY') curCode = 'RMB';
+  if (curCode === 'TWD') curCode = 'NTD';
+  var evId = String(parsed.eventId || '').trim();
+  var matchedEv = null;
+  for (var ei = 0; ei < activeEvents.length; ei++) {
+    if (activeEvents[ei].id === evId || (!evId && curCode !== 'IDR' && activeEvents[ei].currency === curCode)) {
+      matchedEv = activeEvents[ei];
+      evId = matchedEv.id;
+      break;
+    }
+  }
+  var fxRate = 1;
+  if (curCode !== 'IDR') {
+    if (matchedEv && matchedEv.currency === curCode) fxRate = matchedEv.rate;
+    else {
+      try { fxRate = getLiveExchangeRate(curCode).rate; } catch (ignore) { fxRate = 1; }
+    }
+  }
 
   var rawItems = Array.isArray(parsed.items) && parsed.items.length
     ? parsed.items
@@ -1601,9 +1683,7 @@ function scanReceipt(base64Data, mimeType) {
     if (mergeMap[key] !== undefined) {
       var idx = mergeMap[key];
       merged[idx].amount += a;
-      if (nt && merged[idx].note.indexOf(nt) < 0) {
-        merged[idx].note = (merged[idx].note + ', ' + nt).slice(0, 100);
-      }
+      if (nt && merged[idx].note.indexOf(nt) < 0) merged[idx].note = (merged[idx].note + ', ' + nt).slice(0, 100);
     } else {
       mergeMap[key] = merged.length;
       merged.push({ cat: c, sub: s, amount: a, note: nt });
@@ -1628,27 +1708,36 @@ function scanReceipt(base64Data, mimeType) {
       for (var m = 1; m < merged.length; m++) {
         if (merged[m].amount > merged[maxIdx].amount) maxIdx = m;
       }
-      if (merged[maxIdx].amount + diff > 0) {
-        merged[maxIdx].amount += diff;
-      }
+      if (merged[maxIdx].amount + diff > 0) merged[maxIdx].amount += diff;
     }
   }
 
+  if (curCode !== 'IDR' && fxRate > 0) {
+    merged = merged.map(function(it) {
+      return { cat: it.cat, sub: it.sub, amount: Math.max(1, Math.round(it.amount * fxRate)), note: it.note };
+    });
+  }
+
   var first = merged[0];
+  var rawTotal = merged.length === 1 ? first.amount : Math.round(totalReceipt * (curCode !== 'IDR' ? fxRate : 1));
   return {
     type: tp,
-    amount: merged.length === 1 ? first.amount : totalReceipt,
+    amount: rawTotal,
     cat: first.cat,
     sub: first.sub,
     wallet: w,
     walletTo: wTo,
     date: dateStr,
     note: first.note,
-    items: merged
+    items: merged,
+    eventId: evId,
+    currency: curCode !== 'IDR' ? curCode : '',
+    fxAmount: curCode !== 'IDR' ? totalReceipt : 0,
+    rate: fxRate
   };
 }
 
-/* ===== AI SUARA (REKAM AUDIO -> GEMINI) ===== */
+/* ===== AI SUARA (REKAM AUDIO -> GEMINI + VALAS/EVENT) ===== */
 function parseVoiceTransaction(base64Audio, mimeType, textInput) {
   var apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
   if (!apiKey) throw new Error('ERR_NO_KEY');
@@ -1657,6 +1746,7 @@ function parseVoiceTransaction(base64Audio, mimeType, textInput) {
   var env = ensureSheets_();
   var dompetList = readDompetList_(env.dompetSh).map(function(d) { return d.n; });
   var katCfg = readKategoriCfg_(env.katSh);
+  var activeEvents = readActiveEventsHelper_(env.evSh);
   var tz = Session.getScriptTimeZone();
   var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
 
@@ -1669,20 +1759,27 @@ function parseVoiceTransaction(base64Audio, mimeType, textInput) {
     return tp + ': ' + items;
   }).join('\n');
 
+  var evListStr = activeEvents.length
+    ? activeEvents.map(function(e) { return e.id + ' (' + e.name + ', ' + e.currency + ')'; }).join('; ')
+    : 'Tidak ada';
+
   var prompt =
     'Kamu adalah asisten pencatat keuangan pribadi. Dengarkan rekaman suara transaksi berbahasa Indonesia/Inggris ini dan ekstrak menjadi 1 transaksi.\n' +
     'Tanggal hari ini: ' + today + '\n' +
     'Daftar Dompet tersedia: ' + dompetList.join(', ') + '\n' +
+    'Event Aktif saat ini: ' + evListStr + '\n' +
     'Daftar Kategori & [SubKategori] tersedia:\n' + katListStr + '\n\n' +
     'Aturan wajib:\n' +
     '1. "type": pilih salah satu dari "Pengeluaran", "Pemasukan", atau "Transfer" (default "Pengeluaran").\n' +
-    '2. "amount": angka nominal dalam Rupiah sebagai integer tanpa titik/koma (contoh: "5 ribu" -> 5000, "dua puluh lima ribu" -> 25000).\n' +
-    '3. "cat": pilih nama Kategori yang paling cocok persis dari daftar di atas.\n' +
-    '4. "sub": pilih nama SubKategori yang paling cocok persis dari dalam tanda [] kategori tersebut, atau "" jika tidak ada.\n' +
-    '5. "wallet": pilih nama Dompet yang disebut atau paling cocok dari daftar dompet (misal "warung kaki lima" -> "Cash" jika ada di daftar).\n' +
-    '6. "walletTo": isi nama Dompet tujuan HANYA jika type="Transfer" dan cat="Antar Dompet", selain itu "".\n' +
-    '7. "date": format YYYY-MM-DD jika disebut (misal "kemarin"), jika tidak disebut gunakan "' + today + '".\n' +
-    '8. "note": ringkasan singkat barang/kegiatan + tempat (maks 60 karakter).\n' +
+    '2. "currency": kode mata uang yang disebut ("IDR" default, atau "JPY", "SGD", "MYR", "THB", "USD", "RMB", "KRW", "AUD", "NTD" jika menyebut yen/dolar singapura/ringgit/baht/yuan/rmb/ntd/won).\n' +
+    '3. "eventId": isi ID Event dari daftar Event Aktif jika ucapan menyebut acara tersebut atau mata uangnya cocok, selain itu "".\n' +
+    '4. "amount": angka nominal dalam mata uang tersebut sebagai integer (contoh: "25 ribu" -> 25000, "1200 yen" -> 1200).\n' +
+    '5. "cat": pilih nama Kategori yang paling cocok persis dari daftar di atas.\n' +
+    '6. "sub": pilih nama SubKategori yang paling cocok persis dari dalam tanda [] kategori tersebut, atau "" jika tidak ada.\n' +
+    '7. "wallet": pilih nama Dompet yang disebut atau paling cocok dari daftar dompet (misal "warung kaki lima" -> "Cash" jika ada di daftar).\n' +
+    '8. "walletTo": isi nama Dompet tujuan HANYA jika type="Transfer" dan cat="Antar Dompet", selain itu "".\n' +
+    '9. "date": format YYYY-MM-DD jika disebut (misal "kemarin"), jika tidak disebut gunakan "' + today + '".\n' +
+    '10. "note": ringkasan singkat barang/kegiatan + tempat (maks 60 karakter).\n' +
     'Balas HANYA dengan JSON valid tanpa markdown.';
 
   var models = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite', 'gemini-3.5-flash'];
@@ -1692,40 +1789,28 @@ function parseVoiceTransaction(base64Audio, mimeType, textInput) {
 
   var teks = String(textInput || '').trim().slice(0, 500);
   var inputParts = [{ text: prompt }];
-  if (teks) {
-    inputParts.push({ text: 'Ucapan pengguna: ' + teks });
-  } else {
-    inputParts.push({ inline_data: { mime_type: cleanMime, data: cleanAudio } });
-  }
+  if (teks) inputParts.push({ text: 'Ucapan pengguna: ' + teks });
+  else inputParts.push({ inline_data: { mime_type: cleanMime, data: cleanAudio } });
 
   for (var i = 0; i < models.length; i++) {
     var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent';
-    var payload = {
-      contents: [{ parts: inputParts }],
-      generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
-    };
-
     res = UrlFetchApp.fetch(url, {
       method: 'post',
       contentType: 'application/json',
       headers: { 'x-goog-api-key': apiKey },
-      payload: JSON.stringify(payload),
+      payload: JSON.stringify({ contents: [{ parts: inputParts }], generationConfig: { temperature: 0.1, responseMimeType: 'application/json' } }),
       muteHttpExceptions: true
     });
-
     code = res.getResponseCode();
     bodyText = res.getContentText();
-    if (code === 200) break;
-    if (code === 401 || code === 403) break;
+    if (code === 200 || code === 401 || code === 403) break;
   }
 
   if (code !== 200) {
     var errDetail = String(code);
     try {
       var errObj = JSON.parse(bodyText);
-      if (errObj.error && errObj.error.message) {
-        errDetail = code + ' - ' + errObj.error.message.slice(0, 70);
-      }
+      if (errObj.error && errObj.error.message) errDetail = code + ' - ' + errObj.error.message.slice(0, 70);
     } catch (ignore) {}
     throw new Error('ERR_AI_FAIL:' + errDetail);
   }
@@ -1755,15 +1840,40 @@ function parseVoiceTransaction(base64Audio, mimeType, textInput) {
   var wTo = String(parsed.walletTo || '').trim();
   if (dompetList.indexOf(wTo) < 0) wTo = '';
 
+  var rawAmt = Math.max(0, Math.round(Number(parsed.amount) || 0));
+  var curCode = String(parsed.currency || 'IDR').trim().toUpperCase();
+  if (curCode === 'CNY') curCode = 'RMB';
+  if (curCode === 'TWD') curCode = 'NTD';
+  var evId = String(parsed.eventId || '').trim();
+  var matchedEv = null;
+  for (var ei = 0; ei < activeEvents.length; ei++) {
+    if (activeEvents[ei].id === evId || (!evId && curCode !== 'IDR' && activeEvents[ei].currency === curCode)) {
+      matchedEv = activeEvents[ei];
+      evId = matchedEv.id;
+      break;
+    }
+  }
+  var fxRate = 1;
+  if (curCode !== 'IDR') {
+    if (matchedEv && matchedEv.currency === curCode) fxRate = matchedEv.rate;
+    else {
+      try { fxRate = getLiveExchangeRate(curCode).rate; } catch (ignore) { fxRate = 1; }
+    }
+  }
+
   return {
     type: tp,
-    amount: Math.max(0, Math.round(Number(parsed.amount) || 0)),
+    amount: curCode !== 'IDR' ? Math.max(1, Math.round(rawAmt * fxRate)) : rawAmt,
     cat: cat,
     sub: sub || '',
     wallet: w,
     walletTo: wTo,
     date: /^\d{4}-\d{2}-\d{2}$/.test(String(parsed.date || '')) ? parsed.date : today,
-    note: String(parsed.note || '').trim().slice(0, 100)
+    note: String(parsed.note || '').trim().slice(0, 100),
+    eventId: evId,
+    currency: curCode !== 'IDR' ? curCode : '',
+    fxAmount: curCode !== 'IDR' ? rawAmt : 0,
+    rate: fxRate
   };
 }
 
@@ -2054,6 +2164,123 @@ function analyzeMonthWithAI(ym, lang) {
   };
 }
 
+/* ===== TRANSAKSI BERULANG & PENGINGAT TAGIHAN ===== */
+function saveRecurring(payload, ym) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var env = ensureSheets_();
+    var sh = env.recSh;
+    var name = String((payload && payload.name) || '').trim();
+    if (!name) throw new Error('Nama tagihan/rutin tidak boleh kosong');
+    var tp = ['Pengeluaran', 'Pemasukan'].indexOf(payload.type) >= 0 ? payload.type : 'Pengeluaran';
+    var cat = String(payload.cat || 'Tagihan').trim() || 'Tagihan';
+    var sub = String(payload.sub || '').trim();
+    var amt = Math.max(1, Math.round(Number(payload.amount) || 0));
+    var wallet = String(payload.wallet || 'Cash').trim() || 'Cash';
+    var day = Math.min(31, Math.max(1, Math.round(Number(payload.day) || 1)));
+    var note = String(payload.note || '').trim();
+    var id = String((payload && payload.id) || '').trim();
+
+    if (id) {
+      var last = sh.getLastRow();
+      if (last > 1) {
+        var rows = sh.getRange(2, 1, last - 1, 11).getValues();
+        for (var i = 0; i < rows.length; i++) {
+          if (String(rows[i][0]).trim() === id) {
+            var lastPaid = rows[i][10] || '';
+            sh.getRange(i + 2, 1, 1, 11).setValues([[id, safeText_(name), tp, safeText_(cat), safeText_(sub), amt, wallet, day, safeText_(note), 'YA', lastPaid]]);
+            invalidateDataCache_();
+            return getData(ym || null);
+          }
+        }
+      }
+    }
+    var newId = 'REC-' + new Date().getTime() + '-' + Math.floor(Math.random() * 900 + 100);
+    sh.appendRow([newId, safeText_(name), tp, safeText_(cat), safeText_(sub), amt, wallet, day, safeText_(note), 'YA', '']);
+    invalidateDataCache_();
+    return getData(ym || null);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function deleteRecurring(id, ym) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var env = ensureSheets_();
+    var sh = env.recSh;
+    var last = sh.getLastRow();
+    if (last > 1) {
+      var ids = sh.getRange(2, 1, last - 1, 1).getValues();
+      for (var i = 0; i < ids.length; i++) {
+        if (String(ids[i][0]).trim() === String(id).trim()) {
+          sh.getRange(i + 2, 10).setValue('TIDAK');
+          invalidateDataCache_();
+          return getData(ym || null);
+        }
+      }
+    }
+    throw new Error('Tagihan rutin tidak ditemukan');
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function payRecurring(id, ym) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var env = ensureSheets_();
+    var sh = env.recSh;
+    var last = sh.getLastRow();
+    if (last <= 1) throw new Error('Tagihan rutin tidak ditemukan');
+    var rows = sh.getRange(2, 1, last - 1, 11).getValues();
+    var targetRow = -1, item = null;
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i][0]).trim() === String(id).trim()) {
+        targetRow = i + 2;
+        item = rows[i];
+        break;
+      }
+    }
+    if (targetRow < 2 || !item) throw new Error('Tagihan rutin tidak ditemukan');
+
+    var tz = Session.getScriptTimeZone();
+    var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+    var targetYm = (ym && /^\d{4}-\d{2}$/.test(ym)) ? ym : today.slice(0, 7);
+    var txDate = targetYm === today.slice(0, 7) ? today : (targetYm + '-' + ('0' + Math.min(28, Number(item[7]) || 1)).slice(-2));
+
+    var txSh = env.txSh;
+    var col = txCols_(txSh);
+    var txId = 'TX-' + new Date().getTime() + '-' + Math.floor(Math.random() * 900 + 100);
+    var vals = {
+      id: txId,
+      date: txDate,
+      type: String(item[2] || 'Pengeluaran').trim(),
+      cat: safeText_(String(item[3] || 'Tagihan').trim()),
+      sub: safeText_(String(item[4] || '').trim()),
+      amount: parseAmount_(item[5]),
+      wallet: String(item[6] || 'Cash').trim() || 'Cash',
+      walletTo: '',
+      note: safeText_(String(item[8] || item[1] || '').trim())
+    };
+    var n = Math.max(txSh.getLastColumn(), 9);
+    Object.keys(col).forEach(function(k) { n = Math.max(n, col[k] + 1); });
+    var row = [];
+    for (var c = 0; c < n; c++) row.push('');
+    Object.keys(vals).forEach(function(k) { row[col[k]] = vals[k]; });
+    txSh.appendRow(row);
+
+    sh.getRange(targetRow, 11).setNumberFormat('@').setValue(targetYm);
+    invalidateDataCache_();
+    return getData(targetYm);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 /* ===== API UNTUK HALAMAN DI GITHUB PAGES ===== */
 var API_MAP_ = {
   getData: getData,
@@ -2079,7 +2306,10 @@ var API_MAP_ = {
   deleteEvent: deleteEvent,
   getEventTransactions: getEventTransactions,
   getLiveExchangeRate: getLiveExchangeRate,
-  analyzeMonthWithAI: analyzeMonthWithAI
+  analyzeMonthWithAI: analyzeMonthWithAI,
+  saveRecurring: saveRecurring,
+  deleteRecurring: deleteRecurring,
+  payRecurring: payRecurring
 };
 
 function doPost(e) {
