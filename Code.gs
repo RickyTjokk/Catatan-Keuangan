@@ -1301,6 +1301,124 @@ function deleteTransaction(id, currentYm) {
   }
 }
 
+function deleteMultipleTransactions(ids, currentYm) {
+  if (!Array.isArray(ids) || !ids.length) throw new Error('Daftar transaksi kosong');
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var env = ensureSheets_();
+    var sh = env.txSh;
+    var col = txCols_(sh);
+    var last = sh.getLastRow();
+    if (last <= 1) return getData(currentYm || null);
+
+    var want = {};
+    var rowSet = {};
+    ids.forEach(function(rawId) {
+      var id = String(rawId || '').trim();
+      if (!id) return;
+      if (/^ROW-\d+$/.test(id)) {
+        var rNum = Number(id.slice(4));
+        if (rNum >= 2 && rNum <= last) rowSet[rNum] = true;
+      } else {
+        want[id] = true;
+      }
+    });
+
+    if (Object.keys(want).length) {
+      var idVals = sh.getRange(2, col.id + 1, last - 1, 1).getValues();
+      for (var i = 0; i < idVals.length; i++) {
+        var curId = String(idVals[i][0] || '').trim();
+        if (want[curId]) rowSet[i + 2] = true;
+      }
+    }
+
+    var rowsToDelete = Object.keys(rowSet).map(Number).sort(function(a, b) { return b - a; });
+    if (!rowsToDelete.length) throw new Error('Transaksi tidak ditemukan (mungkin sudah terhapus). Muat ulang data.');
+    rowsToDelete.forEach(function(rIdx) { sh.deleteRow(rIdx); });
+    invalidateDataCache_();
+    return getData(currentYm || null);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function adjustWalletBalance(walletName, targetBalance, ym, recordAsTx) {
+  var wName = String(walletName || '').trim();
+  if (!wName) throw new Error('Nama dompet tidak valid');
+  var target = Math.round(Number(targetBalance));
+  if (!isFinite(target)) throw new Error('Nominal saldo tidak valid');
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var tz = Session.getScriptTimeZone();
+    var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+    var targetYm = (ym && /^\d{4}-\d{2}$/.test(ym)) ? ym : today.slice(0, 7);
+
+    invalidateDataCache_();
+    var curData = getData(targetYm);
+    var curWallet = null;
+    (curData.wallets || []).forEach(function(w) {
+      if (w.name === wName) curWallet = w;
+    });
+    if (!curWallet) throw new Error('Dompet "' + wName + '" tidak ditemukan');
+
+    var delta = target - Math.round(curWallet.balance || 0);
+    if (delta === 0) return curData;
+
+    var env = ensureSheets_();
+    if (!recordAsTx) {
+      // Pure tanpa kolom baru & tanpa mengganggu laporan: koreksi SaldoAwal bulan target
+      var newOpening = Math.round(curWallet.opening || 0) + delta;
+      var saSh = env.saSh;
+      var last = saSh.getLastRow();
+      var updated = false;
+      if (last > 1) {
+        var rows = saSh.getRange(2, 1, last - 1, 3).getValues();
+        for (var i = 0; i < rows.length; i++) {
+          if (normYm_(rows[i][0]) === targetYm && String(rows[i][1]).trim() === wName) {
+            saSh.getRange(i + 2, 3).setValue(newOpening);
+            updated = true;
+            break;
+          }
+        }
+      }
+      if (!updated) {
+        saSh.appendRow([targetYm, wName, newOpening]);
+        saSh.getRange(saSh.getLastRow(), 1).setNumberFormat('@').setValue(targetYm);
+      }
+    } else {
+      // Opsi catat selisih sebagai transaksi di riwayat (tetap memakai kolom existing)
+      var sh = env.txSh;
+      var col = txCols_(sh);
+      var txDate = targetYm === today.slice(0, 7)
+        ? today
+        : (targetYm + '-' + ('0' + new Date(Number(targetYm.slice(0, 4)), Number(targetYm.slice(5, 7)), 0).getDate()).slice(-2));
+      var tp = delta > 0 ? 'Pemasukan' : 'Pengeluaran';
+      var cat = delta > 0 ? 'Pemasukan Lain' : 'Lainnya';
+      var id = 'TX-' + new Date().getTime() + '-' + Math.floor(Math.random() * 900 + 100);
+      var vals = {
+        id: id, date: txDate, type: tp, cat: cat, sub: '',
+        amount: Math.abs(delta), wallet: wName, walletTo: '',
+        note: 'Penyesuaian saldo', eventId: '', currency: '', fxAmount: 0
+      };
+      var n = Math.max(sh.getLastColumn(), 9);
+      var row = [];
+      for (var c = 0; c < n; c++) row.push('');
+      Object.keys(vals).forEach(function(k) {
+        if (col[k] < n) row[col[k]] = vals[k];
+      });
+      sh.appendRow(row);
+    }
+
+    invalidateDataCache_();
+    return getData(targetYm);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function setBudget(cat, amount, ym) {
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
@@ -1877,6 +1995,158 @@ function parseVoiceTransaction(base64Audio, mimeType, textInput) {
   };
 }
 
+/* ===== AI CHAT MULTI-TRANSAKSI (NATURAL LANGUAGE -> 1..N TRANSAKSI) ===== */
+function parseAIChatTransactions(textInput) {
+  var apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!apiKey) throw new Error('ERR_NO_KEY');
+  apiKey = apiKey.trim();
+  if (scanUsedToday_() >= SCAN_LIMIT_PER_DAY) throw new Error('ERR_SCAN_LIMIT');
+
+  var teks = String(textInput || '').trim().slice(0, 800);
+  if (!teks) throw new Error('Teks transaksi kosong');
+
+  var env = ensureSheets_();
+  var dompetList = readDompetList_(env.dompetSh).map(function(d) { return d.n; });
+  var katCfg = readKategoriCfg_(env.katSh);
+  var activeEvents = readActiveEventsHelper_(env.evSh);
+  var tz = Session.getScriptTimeZone();
+  var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+
+  var katListStr = ['keluar', 'masuk', 'transfer'].map(function(k) {
+    var tp = k === 'masuk' ? 'Pemasukan' : (k === 'transfer' ? 'Transfer' : 'Pengeluaran');
+    var items = (katCfg[k] || []).map(function(c) {
+      var subs = (c.sub || []).map(function(s) { return s.n; }).join(', ');
+      return c.n + (subs ? ' [' + subs + ']' : '');
+    }).join('; ');
+    return tp + ': ' + items;
+  }).join('\n');
+
+  var evListStr = activeEvents.length
+    ? activeEvents.map(function(e) { return e.id + ' (' + e.name + ', ' + e.currency + ')'; }).join('; ')
+    : 'Tidak ada';
+
+  var prompt =
+    'Kamu adalah asisten pencatat keuangan pribadi. Ekstrak SEMUA transaksi yang disebut dalam pesan pengguna (bisa 1 atau lebih transaksi, bisa beda tanggal/dompet/tipe).\n' +
+    'Tanggal hari ini: ' + today + '\n' +
+    'Daftar Dompet tersedia: ' + dompetList.join(', ') + '\n' +
+    'Event Aktif saat ini: ' + evListStr + '\n' +
+    'Daftar Kategori & [SubKategori] tersedia:\n' + katListStr + '\n\n' +
+    'Balas HANYA dengan JSON valid tanpa markdown dengan format:\n' +
+    '{"transactions": [ { "type": "Pengeluaran|Pemasukan|Transfer", "currency": "IDR", "eventId": "", "amount": 25000, "cat": "...", "sub": "...", "wallet": "...", "walletTo": "", "date": "YYYY-MM-DD", "note": "..." } ]}\n' +
+    'Aturan wajib:\n' +
+    '1. Pecah setiap item pengeluaran/pemasukan/transfer terpisah menjadi objek terpisah dalam array "transactions" (maks 15 item).\n' +
+    '2. "amount": integer nominal dalam mata uang transaksi ("28rb"/"28k" -> 28000, "1,5jt" -> 1500000).\n' +
+    '3. "currency": default "IDR" atau kode valas ("JPY","SGD","MYR","THB","USD","RMB","KRW","AUD","NTD").\n' +
+    '4. "cat" & "sub": pilih persis dari daftar kategori di atas.\n' +
+    '5. "wallet": pilih dompet yang paling cocok dari daftar dompet (default "' + (dompetList[0] || 'Cash') + '").\n' +
+    '6. "walletTo": isi hanya jika type="Transfer" dan cat="Antar Dompet", selain itu "".\n' +
+    '7. "date": format YYYY-MM-DD (hitung relatif terhadap ' + today + ' jika menyebut "kemarin", "lusa lalu", dll.; jika tidak disebut gunakan "' + today + '").\n' +
+    '8. "note": ringkasan singkat barang/kegiatan (maks 60 karakter).\n' +
+    'Pesan pengguna: ' + teks;
+
+  var models = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite', 'gemini-3.5-flash'];
+  var res, code = 0, bodyText = '';
+  for (var i = 0; i < models.length; i++) {
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent';
+    res = UrlFetchApp.fetch(url, {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { 'x-goog-api-key': apiKey },
+      payload: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+      }),
+      muteHttpExceptions: true
+    });
+    code = res.getResponseCode();
+    bodyText = res.getContentText();
+    if (code === 200 || code === 401 || code === 403) break;
+  }
+
+  if (code !== 200) {
+    var errDetail = String(code);
+    try {
+      var errObj = JSON.parse(bodyText);
+      if (errObj.error && errObj.error.message) errDetail = code + ' - ' + errObj.error.message.slice(0, 70);
+    } catch (ignore) {}
+    throw new Error('ERR_AI_FAIL:' + errDetail);
+  }
+
+  scanCountUp_();
+  var json = JSON.parse(bodyText);
+  var parts = json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts;
+  var text = parts ? parts.map(function(p) { return p.text || ''; }).join('') : '';
+  if (!text) throw new Error('ERR_AI_EMPTY');
+
+  var parsed;
+  try {
+    var cleanJson = text.replace(/```json|```/g, '').trim();
+    var firstBrace = cleanJson.indexOf('{');
+    var lastBrace = cleanJson.lastIndexOf('}');
+    if (firstBrace >= 0 && lastBrace > firstBrace) cleanJson = cleanJson.slice(firstBrace, lastBrace + 1);
+    parsed = JSON.parse(cleanJson);
+  } catch (e) {
+    throw new Error('ERR_AI_PARSE');
+  }
+
+  var rawArr = Array.isArray(parsed.transactions) ? parsed.transactions : (Array.isArray(parsed) ? parsed : [parsed]);
+  var fxCache = {};
+  var out = [];
+
+  rawArr.slice(0, 15).forEach(function(item) {
+    if (!item) return;
+    var tp = ['Pengeluaran', 'Pemasukan', 'Transfer'].indexOf(item.type) >= 0 ? item.type : 'Pengeluaran';
+    var cat = canonCat_(tp, String(item.cat || '').trim(), katCfg) || 'Lainnya';
+    var sub = canonSub_(tp, cat, String(item.sub || '').trim(), katCfg) || '';
+    var w = String(item.wallet || '').trim();
+    if (dompetList.indexOf(w) < 0) w = dompetList[0] || 'Cash';
+    var wTo = String(item.walletTo || '').trim();
+    if (dompetList.indexOf(wTo) < 0) wTo = '';
+
+    var rawAmt = Math.max(0, Math.round(Number(item.amount) || 0));
+    if (rawAmt <= 0) return;
+
+    var curCode = String(item.currency || 'IDR').trim().toUpperCase();
+    if (curCode === 'CNY') curCode = 'RMB';
+    if (curCode === 'TWD') curCode = 'NTD';
+    var evId = String(item.eventId || '').trim();
+    var matchedEv = null;
+    for (var ei = 0; ei < activeEvents.length; ei++) {
+      if (activeEvents[ei].id === evId || (!evId && curCode !== 'IDR' && activeEvents[ei].currency === curCode)) {
+        matchedEv = activeEvents[ei];
+        evId = matchedEv.id;
+        break;
+      }
+    }
+    var fxRate = 1;
+    if (curCode !== 'IDR') {
+      if (matchedEv && matchedEv.currency === curCode) fxRate = matchedEv.rate;
+      else if (fxCache[curCode]) fxRate = fxCache[curCode];
+      else {
+        try { fxRate = getLiveExchangeRate(curCode).rate; fxCache[curCode] = fxRate; } catch (ignore) { fxRate = 1; }
+      }
+    }
+
+    out.push({
+      type: tp,
+      amount: curCode !== 'IDR' ? Math.max(1, Math.round(rawAmt * fxRate)) : rawAmt,
+      cat: cat,
+      sub: sub,
+      wallet: w,
+      walletTo: wTo,
+      date: /^\d{4}-\d{2}-\d{2}$/.test(String(item.date || '')) ? item.date : today,
+      note: String(item.note || '').trim().slice(0, 100),
+      eventId: evId,
+      currency: curCode !== 'IDR' ? curCode : '',
+      fxAmount: curCode !== 'IDR' ? rawAmt : 0,
+      rate: fxRate
+    });
+  });
+
+  if (!out.length) throw new Error('ERR_AI_EMPTY');
+  return { transactions: out };
+}
+
 function tesGemini() {
   var key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
   if (!key) { Logger.log('GEMINI_API_KEY belum diisi di Script Properties'); return; }
@@ -2295,12 +2565,15 @@ var API_MAP_ = {
   addMultipleTransactions: addMultipleTransactions,
   updateTransaction: updateTransaction,
   deleteTransaction: deleteTransaction,
+  deleteMultipleTransactions: deleteMultipleTransactions,
+  adjustWalletBalance: adjustWalletBalance,
   setBudget: setBudget,
   setOpening: setOpening,
   setTarget: setTarget,
   exportAllData: exportAllData,
   scanReceipt: scanReceipt,
   parseVoiceTransaction: parseVoiceTransaction,
+  parseAIChatTransactions: parseAIChatTransactions,
   saveEvent: saveEvent,
   toggleEventStatus: toggleEventStatus,
   deleteEvent: deleteEvent,
