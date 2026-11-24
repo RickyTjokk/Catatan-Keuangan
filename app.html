@@ -785,6 +785,7 @@ nav button.fab{margin-top:0;width:56px;height:56px;border:0}
 .cal-cell{min-height:58px;border-radius:12px;background:var(--bg);border:0;padding:5px 1px;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:inherit;color:var(--text);cursor:pointer}
 .cal-cell:active{opacity:.7}
 .cal-cell.empty{background:transparent;pointer-events:none}
+.cal-cell.sel{background:var(--primary-soft);outline:1.5px solid var(--primary)}
 .cal-d{font-size:13px;font-weight:700;min-width:22px;height:22px;line-height:22px;text-align:center;border-radius:11px}
 .cal-d.today{background:var(--primary);color:#fff}
 .cal-in,.cal-out{font-size:9.5px;font-weight:700;line-height:1.15;white-space:nowrap}
@@ -4924,6 +4925,7 @@ function dayLabel(d){
   return HARI[new Date(q[0],q[1]-1,q[2]).getDay()];
 }
 var listSort = 'newest';
+var listFilterDate = '';
 function setListSort(s){
   listSort = s || 'newest';
   document.querySelectorAll('#sortSeg button').forEach(function(b){ b.classList.toggle('on', b.dataset.s === listSort); });
@@ -4934,6 +4936,7 @@ function clearSingleFilter(kind){
   else if(kind === 'type') listFilterType = 'Semua';
   else if(kind === 'wallet') listFilterWallet = 'Semua';
   else if(kind === 'event') listFilterEvent = 'Semua';
+  else if(kind === 'date'){ listFilterDate = ''; renderCalendar(); }
   updateFilterBadge();
   if(listAllMonths) fetchCrossMonth(); else renderDays();
 }
@@ -4942,6 +4945,11 @@ function renderActiveFilterChips(){
   if(!box) return;
   var en = APP_LANG === 'en';
   var chips = [];
+  if(listFilterDate){
+    var dp = listFilterDate.split('-').map(Number);
+    var dLbl = ('0'+dp[2]).slice(-2) + ' ' + BLN[dp[1]-1].slice(0,3) + ' ' + dp[0];
+    chips.push('<button type="button" class="achip" onclick="clearSingleFilter(\'date\')">📅 '+esc(dLbl)+' ✕</button>');
+  }
   if(listAllMonths) chips.push('<button type="button" class="achip" onclick="clearSingleFilter(\'allMonths\')">'+(en?'🌐 All Months':'🌐 Semua Bulan')+' ✕</button>');
   if(listFilterType !== 'Semua') chips.push('<button type="button" class="achip" onclick="clearSingleFilter(\'type\')">'+esc(trCat(listFilterType))+' ✕</button>');
   if(listFilterWallet !== 'Semua') chips.push('<button type="button" class="achip" onclick="clearSingleFilter(\'wallet\')">💳 '+esc(listFilterWallet)+' ✕</button>');
@@ -4954,6 +4962,7 @@ function renderActiveFilterChips(){
   box.innerHTML = chips.join('');
 }
 function renderDays(){
+  if(listFilterDate && S && !listAllMonths && listFilterDate.slice(0,7) !== S.ym) listFilterDate = '';
   updateFilterBadge();
   renderActiveFilterChips();
   $('lFreeCash').textContent = mk(rp(S.freeCash));
@@ -4961,6 +4970,7 @@ function renderDays(){
   var q = $('fSearch').value.trim().toLowerCase();
   var source = listAllMonths ? crossMonthTxs : visibleTxs();
   var filtered = source.filter(function(t){
+    if(listFilterDate && t.date !== listFilterDate) return false;
     if(listFilterType !== 'Semua' && t.type !== listFilterType) return false;
     if(listFilterWallet !== 'Semua'){
       if(t.wallet !== listFilterWallet && t.walletTo !== listFilterWallet) return false;
@@ -4976,7 +4986,7 @@ function renderDays(){
     }
     return true;
   });
-  var isFiltered = q || listFilterType !== 'Semua' || listFilterWallet !== 'Semua' || listFilterEvent !== 'Semua' || listAllMonths;
+  var isFiltered = q || listFilterDate || listFilterType !== 'Semua' || listFilterWallet !== 'Semua' || listFilterEvent !== 'Semua' || listAllMonths;
   if(!filtered.length){
     $('fMeta').textContent = isFiltered
       ? (APP_LANG === 'en' ? '0 matching transactions' : '0 transaksi cocok')
@@ -5113,9 +5123,22 @@ var calOpen = false;
 function toggleCalendar(){ calOpen = !calOpen; renderCalendar(); }
 
 function calPick(ds){
-  var el = $('day-' + ds);
-  if(!el){ toast(APP_LANG === 'en' ? 'No transactions on this date' : 'Tidak ada transaksi di tanggal ini'); return; }
-  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if(listFilterDate === ds){
+    listFilterDate = '';
+    renderCalendar();
+    renderDays();
+    return;
+  }
+  var hasTx = visibleTxs().some(function(t){ return t.date === ds; });
+  if(!hasTx){
+    toast(APP_LANG === 'en' ? 'No transactions on this date' : 'Tidak ada transaksi di tanggal ini');
+    return;
+  }
+  listFilterDate = ds;
+  renderCalendar();
+  renderDays();
+  var el = $('day-' + ds) || $('list');
+  if(el) setTimeout(function(){ el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 40);
 }
 
 function renderCalendar(){
@@ -5146,7 +5169,8 @@ function renderCalendar(){
   for(var d = 1; d <= daysInMonth; d++){
     var ds = S.ym + '-' + ('0' + d).slice(-2);
     var v = byDay[d];
-    html += '<button type="button" class="cal-cell" onclick="calPick(\'' + ds + '\')">' +
+    var isSel = listFilterDate === ds;
+    html += '<button type="button" class="cal-cell' + (isSel ? ' sel' : '') + '" onclick="calPick(\'' + ds + '\')">' +
       '<span class="cal-d' + (ds === S.today ? ' today' : '') + '">' + d + '</span>' +
       (v && v.inc > 0 ? '<span class="cal-in">+' + amt(v.inc) + '</span>' : '') +
       (v && v.out > 0 ? '<span class="cal-out">-' + amt(v.out) + '</span>' : '') +
