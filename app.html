@@ -2350,7 +2350,25 @@ var MSG_EN = {
   'Daftar transaksi kosong': 'Transaction list is empty',
   'ERR_UNKNOWN_FN': 'Backend Apps Script needs to be re-deployed for this new feature',
   'Saldo disesuaikan ✅': 'Balance adjusted ✅',
-  'Saldo sudah sesuai 👌': 'Balance already matches 👌'
+  'Saldo sudah sesuai 👌': 'Balance already matches 👌',
+  'Nama Event tidak boleh kosong': 'Event name cannot be empty',
+  'Kurs harus lebih dari 0': 'Exchange rate must be greater than 0',
+  'Kurs tidak valid': 'Invalid exchange rate',
+  'Event tersimpan ✅': 'Event saved ✅',
+  'Event dihapus 🗑': 'Event deleted 🗑',
+  'Event ditandai selesai ✅': 'Event marked as completed ✅',
+  'Event diaktifkan kembali 🔄': 'Event reactivated 🔄',
+  'Tagihan rutin tersimpan ✅': 'Recurring bill saved ✅',
+  'Berhasil dicatat ✅': 'Logged ✅',
+  'Dihapus 🗑': 'Deleted 🗑',
+  'Isi nama tagihan/rutin dulu': 'Please enter a bill/recurring name first',
+  'Nominal harus lebih dari 0': 'Amount must be greater than 0',
+  'Disimpan di antrean offline 📶': 'Saved to offline queue 📶',
+  'Semua transaksi sudah tersinkron ✅': 'All transactions are synced ✅',
+  'Masih offline, tunggu sinyal aktif ya 📶': 'Still offline, waiting for signal 📶',
+  'Antrean offline tersinkron ✅': 'Offline queue synced ✅',
+  'Sync tertunda, coba lagi saat sinyal stabil': 'Sync delayed, try again when signal is stable',
+  'Izinkan pop-up browser untuk mencetak PDF': 'Allow browser pop-ups to print PDF'
 };
 
 var MSG_RX = [
@@ -2359,6 +2377,7 @@ var MSG_RX = [
   [/^Gagal menghapus: ([\s\S]*)$/,  function(m){ return 'Failed to delete: ' + trMsg(m[1]); }],
   [/^Gagal export: ([\s\S]*)$/,     function(m){ return 'Export failed: ' + trMsg(m[1]); }],
   [/^Gagal mencari: ([\s\S]*)$/,    function(m){ return 'Search failed: ' + trMsg(m[1]); }],
+  [/^Kurs live gagal: ([\s\S]*)$/,  function(m){ return 'Live rate failed: ' + trMsg(m[1]); }],
   [/^ERR_AI_FAIL:(.*)$/,            function(m){ return 'AI service error (' + m[1] + ')'; }],
   [/^Dompet "([\s\S]*)" ditambahkan ✅$/, function(m){ return 'Wallet "' + m[1] + '" added ✅'; }],
   [/^Dompet "([\s\S]*)" dihapus 🗑$/,     function(m){ return 'Wallet "' + m[1] + '" deleted 🗑'; }],
@@ -2443,7 +2462,17 @@ var STATIC_EN = {
   'Konfirmasi tindakan': 'Confirm action',
   'Edit transaksi': 'Edit transaction',
   'Kalkulator jumlah': 'Amount calculator',
-  'Hapus': 'Delete'
+  'Hapus': 'Delete',
+  'Data belum bisa dimuat.': 'Could not load data.',
+  'Coba lagi': 'Try again',
+  '🔄 Tarik untuk menyegarkan…': '🔄 Pull to refresh…',
+  'Nama (mis. Internet, Listrik, Gaji)': 'Name (e.g. Internet, Electricity, Salary)',
+  'mis. Internet Biznet': 'e.g. Home Internet',
+  'Nominal (Rp)': 'Amount (Rp)',
+  'mis. 350000': 'e.g. 350000',
+  'Tgl Jatuh Tempo (1-31)': 'Due Day (1-31)',
+  'Kategori': 'Category',
+  'Konversi ke Rupiah:': 'Convert to IDR:'
 };
 
 var DYN_SEL = '#cats,#allCats,#recentTx,#list,#cmBody,#budList,#budAddList,#walletList,#fWallets,#fWalletsTo,' +
@@ -2719,6 +2748,7 @@ function applyLang(){
   if($('fDatePrev')) $('fDatePrev').setAttribute('aria-label', APP_LANG === 'en' ? 'Previous day' : 'Hari sebelumnya');
   if($('fDateNext')) $('fDateNext').setAttribute('aria-label', APP_LANG === 'en' ? 'Next day' : 'Hari berikutnya');
 
+  if(typeof renderOfflineBar === 'function') renderOfflineBar();
   if(S) render();
   translateStatic();
 }
@@ -6421,19 +6451,21 @@ function renderHomeActiveEvents(){
   if(!box || !S) return;
   var active = (S.events || []).filter(function(e){ return e.status !== 'SELESAI'; });
   if(!active.length){ box.innerHTML = ''; return; }
+  var en = APP_LANG === 'en';
   box.innerHTML = active.slice(0, 2).map(function(ev){
     var isFx = ev.currency && ev.currency !== 'IDR';
     var sub = isFx
-      ? (fmtFx(ev.fxSpent || 0, ev.currency) + ' · ' + (ev.txCount || 0) + ' transaksi')
-      : ((ev.txCount || 0) + ' transaksi' + (ev.budget > 0 ? ' · Target ' + short(ev.budget) : ''));
+      ? (fmtFx(ev.fxSpent || 0, ev.currency) + ' · ' + (ev.txCount || 0) + (en ? ' tx' : ' transaksi'))
+      : ((ev.txCount || 0) + (en ? ' tx' : ' transaksi') + (ev.budget > 0 ? ' · Target ' + short(ev.budget) : ''));
     return '<div class="ev-banner" onclick="openEvDetail(\''+esc(ev.id)+'\')">'+
       '<div class="ev-banner-ico">'+esc(ev.icon || '✈️')+'</div>'+
       '<div class="ev-banner-mid"><b>'+esc(ev.name)+'</b><small>'+esc(sub)+'</small></div>'+
-      '<div class="ev-banner-amt"><b>'+mk(rp(ev.spent || 0))+'</b><small>'+(ev.budget > 0 ? Math.round(((ev.spent||0)/ev.budget)*100)+'% budget' : 'Aktif ›')+'</small></div>'+
+      '<div class="ev-banner-amt"><b>'+mk(rp(ev.spent || 0))+'</b><small>'+(ev.budget > 0 ? Math.round(((ev.spent||0)/ev.budget)*100)+'% budget' : (en ? 'Active ›' : 'Aktif ›'))+'</small></div>'+
     '</div>';
   }).join('');
 }
 function evCardHtml(ev){
+  var en = APP_LANG === 'en';
   var isDone = ev.status === 'SELESAI';
   var isFx = ev.currency && ev.currency !== 'IDR';
   var spent = Number(ev.spent) || 0;
@@ -6444,27 +6476,28 @@ function evCardHtml(ev){
   var over = bud > 0 && spent > bud;
   var dateTxt = (ev.startDate || ev.endDate)
     ? ((ev.startDate || '…') + ' → ' + (ev.endDate || '…'))
-    : (APP_LANG === 'en' ? 'No date limit' : 'Tanpa batas tanggal');
+    : (en ? 'No date limit' : 'Tanpa batas tanggal');
   var fxLine = isFx ? (' · <b>' + esc(fmtFx(ev.fxSpent || 0, ev.currency)) + '</b>') : '';
   return '<div class="ev-card'+(isDone?' done':'')+'" onclick="openEvDetail(\''+esc(ev.id)+'\')">'+
     '<div class="ev-top">'+
       '<div class="ev-ico">'+esc(ev.icon || '✈️')+'</div>'+
       '<div class="ev-mid"><b>'+esc(ev.name)+'</b><small>'+esc(dateTxt)+' · '+(ev.txCount||0)+' tx</small></div>'+
-      '<span class="ev-badge'+(isDone?' done':'')+'">'+(isFx ? esc((curMeta(ev.currency).f ? curMeta(ev.currency).f + ' ' : '') + ev.currency) : (isDone ? 'Selesai' : 'Aktif'))+'</span>'+
+      '<span class="ev-badge'+(isDone?' done':'')+'">'+(isFx ? esc((curMeta(ev.currency).f ? curMeta(ev.currency).f + ' ' : '') + ev.currency) : (isDone ? (en ? 'Done' : 'Selesai') : (en ? 'Active' : 'Aktif')))+'</span>'+
     '</div>'+
     '<div class="ev-nums">'+
-      '<span>Keluar: <b>'+mk(rp(spent))+'</b>'+fxLine+'</span>'+
+      '<span>'+(en ? 'Spent: ' : 'Keluar: ')+'<b>'+mk(rp(spent))+'</b>'+fxLine+'</span>'+
       (bud > 0 ? '<span>Target '+mk(rp(bud))+'</span>' : '')+
     '</div>'+
     (bud > 0 ? '<div class="ev-bar"><i class="'+(over?'over':'')+'" style="width:'+pct+'%"></i></div>' : '')+
     '<div class="ev-foot">'+
-      '<span>Net cost: <b>'+mk(rp(net))+'</b>'+(inc>0?' (Masuk '+mk(rp(inc))+')':'')+'</span>'+
-      (bud > 0 ? '<span>'+(over ? 'Over ' + mk(rp(spent - bud)) : 'Sisa ' + mk(rp(bud - spent)))+'</span>' : '<span>Lihat detail ›</span>')+
+      '<span>Net cost: <b>'+mk(rp(net))+'</b>'+(inc>0?' ('+(en?'In ':'Masuk ')+mk(rp(inc))+')':'')+'</span>'+
+      (bud > 0 ? '<span>'+(over ? 'Over ' + mk(rp(spent - bud)) : (en ? 'Left ' : 'Sisa ') + mk(rp(bud - spent)))+'</span>' : '<span>'+(en ? 'View details ›' : 'Lihat detail ›')+'</span>')+
     '</div>'+
   '</div>';
 }
 function renderEventsPage(){
   if(!S || !$('evActiveList')) return;
+  var en = APP_LANG === 'en';
   var list = S.events || [];
   var active = list.filter(function(e){ return e.status !== 'SELESAI'; });
   var done = list.filter(function(e){ return e.status === 'SELESAI'; });
@@ -6474,7 +6507,7 @@ function renderEventsPage(){
   $('evDoneCnt').textContent = done.length;
   $('evActiveList').innerHTML = active.length
     ? active.map(evCardHtml).join('')
-    : '<div class="card"><div class="empty" style="padding:24px 10px"><div style="font-size:28px;margin-bottom:8px">✈️</div><div style="margin-bottom:12px">'+(APP_LANG === 'en' ? 'No active events yet.<br>Create one for trips, weddings, or projects!' : 'Belum ada Event aktif.<br>Buat Event untuk Trip Liburan, Nikahan, atau Proyek!')+'</div><button type="button" class="add-bud-btn" style="padding:10px 18px;font-size:13.5px" onclick="openEvModal()">+ Buat Event</button></div></div>';
+    : '<div class="card"><div class="empty" style="padding:24px 10px"><div style="font-size:28px;margin-bottom:8px">✈️</div><div style="margin-bottom:12px">'+(en ? 'No active events yet.<br>Create one for trips, weddings, or projects!' : 'Belum ada Event aktif.<br>Buat Event untuk Trip Liburan, Nikahan, atau Proyek!')+'</div><button type="button" class="add-bud-btn" style="padding:10px 18px;font-size:13.5px" onclick="openEvModal()">'+(en ? '+ Create Event' : '+ Buat Event')+'</button></div></div>';
   $('evDoneWrap').style.display = done.length ? '' : 'none';
   $('evDoneList').innerHTML = done.map(evCardHtml).join('');
 }
@@ -6490,7 +6523,8 @@ function renderFormEventBox(){
   }
   box.style.display = '';
   if(pickedEventId && !active.some(function(e){ return e.id === pickedEventId; })) pickedEventId = '';
-  var chips = '<button type="button" class="wchip'+(!pickedEventId?' on':'')+'" onclick="setFormEvent(\'\')"><span>Tanpa Event</span></button>';
+  var noEvLbl = APP_LANG === 'en' ? 'No Event' : 'Tanpa Event';
+  var chips = '<button type="button" class="wchip'+(!pickedEventId?' on':'')+'" onclick="setFormEvent(\'\')"><span>'+noEvLbl+'</span></button>';
   chips += active.map(function(ev){
     return '<button type="button" class="wchip'+(pickedEventId===ev.id?' on':'')+'" onclick="setFormEvent(\''+esc(ev.id)+'\')"><span>'+esc(ev.icon||'✈️')+' '+esc(ev.name)+(ev.currency&&ev.currency!=='IDR'?' ('+esc(ev.currency)+')':'')+'</span></button>';
   }).join('');
@@ -6509,7 +6543,8 @@ function renderEditEventBox(){
   var all = S.events || [];
   if(!all.length){ box.style.display = 'none'; updateTxFxPreview('edit'); return; }
   box.style.display = '';
-  var chips = '<button type="button" class="wchip'+(!eEventId?' on':'')+'" onclick="setEditEvent(\'\')"><span>Tanpa Event</span></button>';
+  var noEvLbl = APP_LANG === 'en' ? 'No Event' : 'Tanpa Event';
+  var chips = '<button type="button" class="wchip'+(!eEventId?' on':'')+'" onclick="setEditEvent(\'\')"><span>'+noEvLbl+'</span></button>';
   chips += all.filter(function(e){ return e.status !== 'SELESAI' || e.id === eEventId; }).map(function(ev){
     return '<button type="button" class="wchip'+(eEventId===ev.id?' on':'')+'" onclick="setEditEvent(\''+esc(ev.id)+'\')"><span>'+esc(ev.icon||'✈️')+' '+esc(ev.name)+'</span></button>';
   }).join('');
@@ -6524,6 +6559,7 @@ function setEditEvent(id){
 }
 function updateTxFxPreview(mode){
   var isEdit = mode === 'edit';
+  var en = APP_LANG === 'en';
   var evId = isEdit ? eEventId : pickedEventId;
   var rate = isEdit ? eFxRate : pickedFxRate;
   var ev = findEventById(evId);
@@ -6533,23 +6569,24 @@ function updateTxFxPreview(mode){
   if(!box || !lbl) return;
   if(!isFx){
     box.classList.remove('on');
-    lbl.textContent = isEdit ? 'Jumlah (Rp) · ketuk untuk mengubah' : tr('amtTap');
+    lbl.textContent = isEdit ? (en ? 'Amount (Rp) · tap to change' : 'Jumlah (Rp) · ketuk untuk mengubah') : tr('amtTap');
     return;
   }
   var m = curMeta(ev.currency);
-  lbl.textContent = 'Jumlah (' + ev.currency + ' ' + m.s + ') · ketuk untuk mengisi';
+  lbl.textContent = (en ? 'Amount (' : 'Jumlah (') + ev.currency + ' ' + m.s + (en ? ') · tap to enter' : ') · ketuk untuk mengisi');
   var raw = Number($(isEdit ? 'eAmt' : 'fAmt').value.replace(/\D/g,'')) || 0;
   var idr = Math.round(raw * (rate || ev.rate || 1));
   $(isEdit ? 'eFxIdr' : 'fFxIdr').textContent = rp(idr);
-  $(isEdit ? 'eFxRateBtn' : 'fFxRateBtn').textContent = 'Kurs: 1 ' + ev.currency + ' = Rp ' + num(rate || ev.rate || 1);
+  $(isEdit ? 'eFxRateBtn' : 'fFxRateBtn').textContent = (en ? 'Rate: 1 ' : 'Kurs: 1 ') + ev.currency + ' = Rp ' + num(rate || ev.rate || 1);
   box.classList.add('on');
 }
 function editTxFxRate(mode){
   var isEdit = mode === 'edit';
+  var en = APP_LANG === 'en';
   var ev = findEventById(isEdit ? eEventId : pickedEventId);
   if(!ev) return;
   var curRate = isEdit ? eFxRate : pickedFxRate;
-  var val = prompt('Masukkan kurs 1 ' + ev.currency + ' ke Rupiah (Rp):', String(curRate || ev.rate || 1));
+  var val = prompt(en ? ('Enter exchange rate 1 ' + ev.currency + ' to IDR (Rp):') : ('Masukkan kurs 1 ' + ev.currency + ' ke Rupiah (Rp):'), String(curRate || ev.rate || 1));
   if(val === null) return;
   var r = Number(String(val).replace(',', '.'));
   if(!isFinite(r) || r <= 0){ toast('Kurs tidak valid'); return; }
@@ -6561,7 +6598,8 @@ function editTxFxRate(mode){
 function openEvModal(evId){
   evEditId = evId || '';
   var ev = findEventById(evEditId);
-  $('evModalTitle').textContent = ev ? '✏️ Edit Event' : '✈️ Buat Event Baru';
+  var en = APP_LANG === 'en';
+  $('evModalTitle').textContent = ev ? '✏️ Edit Event' : (en ? '✈️ Create New Event' : '✈️ Buat Event Baru');
   evPickedIcon = ev ? (ev.icon || '✈️') : '✈️';
   evPickedCur = ev ? (ev.currency || 'IDR') : 'IDR';
   $('evNameIn').value = ev ? ev.name : '';
@@ -6629,7 +6667,8 @@ function saveEventForm(){
     endDate: $('evEndIn').value || '',
     excludeReport: $('evExclIn').checked ? 'YA' : 'TIDAK'
   };
-  var btn = $('evSaveBtn'); btn.disabled = true; btn.textContent = 'Menyimpan…';
+  var en = APP_LANG === 'en';
+  var btn = $('evSaveBtn'); btn.disabled = true; btn.textContent = en ? 'Saving…' : 'Menyimpan…';
   setSyncing(true, 'Menyimpan Event…');
   call('saveEvent', payload, S.ym)
     .then(function(d){
@@ -6641,7 +6680,7 @@ function saveEventForm(){
       toast('Event tersimpan ✅');
     })
     .catch(function(e){ setSyncing(false); toast('Gagal: ' + (e.message || e)); })
-    .then(function(){ btn.disabled = false; btn.textContent = 'Simpan Event'; });
+    .then(function(){ btn.disabled = false; btn.textContent = en ? 'Save Event' : 'Simpan Event'; });
 }
 
 /* Modal Detail Event + Breakdown Kategori + Cetak PDF Event */
@@ -6663,33 +6702,34 @@ function renderEvBreakdownHtml(list){
       '<div class="ev-bk-bar"><i style="width:'+pct+'%;background:'+color+'"></i></div>'+
     '</div>';
   }).join('');
-  return '<div class="card" style="margin-bottom:12px;padding:12px 14px"><h3 style="margin-bottom:8px;font-size:13px">📊 Breakdown Kategori</h3>'+rows+'</div>';
+  return '<div class="card" style="margin-bottom:12px;padding:12px 14px"><h3 style="margin-bottom:8px;font-size:13px">📊 '+(APP_LANG==='en'?'Category Breakdown':'Breakdown Kategori')+'</h3>'+rows+'</div>';
 }
 function openEvDetail(evId){
   var ev = findEventById(evId);
   if(!ev) return;
   evDetailId = evId;
+  var en = APP_LANG === 'en';
   var isDone = ev.status === 'SELESAI';
   var isFx = ev.currency && ev.currency !== 'IDR';
   var spent = Number(ev.spent) || 0, inc = Number(ev.income) || 0, net = spent - inc;
   $('evDetTitle').textContent = (ev.icon || '✈️') + ' ' + ev.name;
-  var fxHtml = isFx ? '<small style="color:var(--primary);font-weight:700">'+esc(fmtFx(ev.fxSpent||0, ev.currency))+' (kurs Rp '+num(ev.rate)+')</small>' : '';
+  var fxHtml = isFx ? '<small style="color:var(--primary);font-weight:700">'+esc(fmtFx(ev.fxSpent||0, ev.currency))+' ('+(en?'rate':'kurs')+' Rp '+num(ev.rate)+')</small>' : '';
   $('evDetBody').innerHTML =
     '<div class="ev-sum-grid">'+
-      '<div class="ev-sum-box"><small>Total Pengeluaran</small><b>'+mk(rp(spent))+'</b>'+fxHtml+'</div>'+
-      '<div class="ev-sum-box"><small>Biaya Bersih (Net)</small><b>'+mk(rp(net))+'</b>'+(inc>0?'<small>Masuk: '+mk(rp(inc))+'</small>':'')+'</div>'+
+      '<div class="ev-sum-box"><small>'+(en?'Total Expenses':'Total Pengeluaran')+'</small><b>'+mk(rp(spent))+'</b>'+fxHtml+'</div>'+
+      '<div class="ev-sum-box"><small>'+(en?'Net Cost':'Biaya Bersih (Net)')+'</small><b>'+mk(rp(net))+'</b>'+(inc>0?'<small>'+(en?'In: ':'Masuk: ')+mk(rp(inc))+'</small>':'')+'</div>'+
     '</div>'+
     '<div class="ev-act-row" style="margin-bottom:8px">'+
-      '<button type="button" class="pri" onclick="addTxToEvent(\''+esc(ev.id)+'\')">+ Catat Transaksi</button>'+
+      '<button type="button" class="pri" onclick="addTxToEvent(\''+esc(ev.id)+'\')">'+(en?'+ Add Transaction':'+ Catat Transaksi')+'</button>'+
       '<button type="button" onclick="openEvModal(\''+esc(ev.id)+'\')">✏️ Edit</button>'+
       '<button type="button" onclick="exportEventPdf(\''+esc(ev.id)+'\')">🖨️ PDF</button>'+
     '</div>'+
     '<div class="ev-act-row" style="margin-bottom:14px">'+
-      '<button type="button" onclick="toggleEvStatus(\''+esc(ev.id)+'\',\''+(isDone?'AKTIF':'SELESAI')+'\')">'+(isDone?'🔄 Aktifkan Lagi':'✅ Tandai Selesai')+'</button>'+
-      '<button type="button" class="dng" onclick="confirmDeleteEvent(\''+esc(ev.id)+'\')">🗑 Hapus Event</button>'+
+      '<button type="button" onclick="toggleEvStatus(\''+esc(ev.id)+'\',\''+(isDone?'AKTIF':'SELESAI')+'\')">'+(isDone?(en?'🔄 Reactivate':'🔄 Aktifkan Lagi'):(en?'✅ Mark Completed':'✅ Tandai Selesai'))+'</button>'+
+      '<button type="button" class="dng" onclick="confirmDeleteEvent(\''+esc(ev.id)+'\')">'+(en?'🗑 Delete Event':'🗑 Hapus Event')+'</button>'+
     '</div>'+
     '<div id="evDetBreakdown"></div>'+
-    '<div id="evDetTxList"><div class="empty" style="padding:18px">Memuat transaksi event…</div></div>';
+    '<div id="evDetTxList"><div class="empty" style="padding:18px">'+(en?'Loading event transactions…':'Memuat transaksi event…')+'</div></div>';
   $('evDetailBg').classList.add('open');
   $('evDetailModal').classList.add('open');
 
@@ -6701,7 +6741,7 @@ function openEvDetail(evId){
       var box = $('evDetTxList');
       if(!box) return;
       if(!evDetailTxs.length){
-        box.innerHTML = '<div class="empty" style="padding:18px">Belum ada transaksi di event ini.</div>';
+        box.innerHTML = '<div class="empty" style="padding:18px">'+(en?'No transactions in this event yet.':'Belum ada transaksi di event ini.')+'</div>';
         return;
       }
       box.innerHTML = evDetailTxs.map(function(t){
@@ -6716,7 +6756,7 @@ function openEvDetail(evId){
       }).join('');
     })
     .catch(function(){
-      if($('evDetTxList')) $('evDetTxList').innerHTML = '<div class="empty" style="padding:18px">Gagal memuat transaksi event.</div>';
+      if($('evDetTxList')) $('evDetTxList').innerHTML = '<div class="empty" style="padding:18px">'+(en?'Failed to load event transactions.':'Gagal memuat transaksi event.')+'</div>';
     });
 }
 function closeEvDetail(){
@@ -6741,10 +6781,11 @@ function toggleEvStatus(evId, nextStatus){
 }
 function confirmDeleteEvent(evId){
   var ev = findEventById(evId);
+  var en = APP_LANG === 'en';
   openConfirmSheet(
-    'Hapus Event "' + (ev ? ev.name : '') + '"?',
-    'Event akan dihapus, tetapi transaksi yang sudah tercatat tetap aman di Riwayat.',
-    'Ya, Hapus',
+    (en ? 'Delete Event "' : 'Hapus Event "') + (ev ? ev.name : '') + '"?',
+    en ? 'The event will be deleted, but recorded transactions remain safely in History.' : 'Event akan dihapus, tetapi transaksi yang sudah tercatat tetap aman di Riwayat.',
+    en ? 'Yes, Delete' : 'Ya, Hapus',
     function(){
       setSyncing(true, 'Menghapus Event…');
       call('deleteEvent', evId, S.ym)
@@ -6768,7 +6809,7 @@ function renderInteractiveDonut(list, tot){
   lapDonutTot = tot || 0;
   lapDonutActive = -1;
   if(!lapDonutData.length || lapDonutTot <= 0){
-    box.innerHTML = '<div class="empty" style="padding:16px">Belum ada pengeluaran bulan ini</div>';
+    box.innerHTML = '<div class="empty" style="padding:16px">'+(APP_LANG==='en'?'No expenses this month':'Belum ada pengeluaran bulan ini')+'</div>';
     return;
   }
   drawInteractiveDonut();
@@ -6780,6 +6821,7 @@ function pickDonutSlice(idx){
 function drawInteractiveDonut(){
   var box = $('lapDonutBox');
   if(!box || !lapDonutData.length) return;
+  var en = APP_LANG === 'en';
   var r = 68, cx = 95, cy = 95, circ = 2 * Math.PI * r, offset = 0;
   var segs = lapDonutData.map(function(c, idx){
     var frac = c.amount / lapDonutTot;
@@ -6795,9 +6837,9 @@ function drawInteractiveDonut(){
     return s;
   }).join('');
   var sel = lapDonutActive >= 0 ? lapDonutData[lapDonutActive] : null;
-  var cLbl = sel ? trCat(sel.cat) : (APP_LANG === 'en' ? 'Total Out' : 'Total Keluar');
+  var cLbl = sel ? trCat(sel.cat) : (en ? 'Total Out' : 'Total Keluar');
   var cVal = sel ? mk(rp(sel.amount)) : mk(rp(lapDonutTot));
-  var cPct = sel ? (Math.round((sel.amount / lapDonutTot) * 100) + '%') : (lapDonutData.length + ' kategori');
+  var cPct = sel ? (Math.round((sel.amount / lapDonutTot) * 100) + '%') : (lapDonutData.length + (en ? ' categories' : ' kategori'));
   var pills = lapDonutData.map(function(c, idx){
     var color = PALETTE[idx % PALETTE.length];
     var pct = Math.round((c.amount / lapDonutTot) * 100);
@@ -6875,35 +6917,37 @@ function openPrintableHtml(title, bodyHtml){
 }
 function exportMonthlyPdf(){
   if(!S) return;
+  var en = APP_LANG === 'en';
   var mName = BLN[+S.ym.slice(5,7)-1] + ' ' + S.ym.slice(0,4);
   var rows = (S.transactions || []).map(function(t){
-    return '<tr><td>'+esc(t.date)+'</td><td>'+esc(t.type)+'</td><td>'+esc(t.cat)+(t.sub?' · '+esc(t.sub):'')+'</td><td>'+esc(t.wallet)+'</td><td>'+esc(t.note||'')+'</td><td class="r">'+rp(t.amount)+'</td></tr>';
+    return '<tr><td>'+esc(t.date)+'</td><td>'+esc(trCat(t.type))+'</td><td>'+esc(trCat(t.cat))+(t.sub?' · '+esc(trCat(t.sub)):'')+'</td><td>'+esc(t.wallet)+'</td><td>'+esc(t.note||'')+'</td><td class="r">'+rp(t.amount)+'</td></tr>';
   }).join('');
-  var html = '<h1>Laporan Keuangan — '+esc(mName)+'</h1><div class="sub">Dicetak pada '+esc(S.today)+'</div>'+
+  var html = '<h1>'+(en?'Financial Report — ':'Laporan Keuangan — ')+esc(mName)+'</h1><div class="sub">'+(en?'Printed on ':'Dicetak pada ')+esc(S.today)+'</div>'+
     '<div class="grid">'+
-      '<div class="box"><small>Total Pemasukan</small><b>'+rp(S.income)+'</b></div>'+
-      '<div class="box"><small>Total Pengeluaran</small><b>'+rp(S.expense)+'</b></div>'+
-      '<div class="box"><small>Surplus Bersih</small><b>'+rp(S.saving)+'</b></div>'+
+      '<div class="box"><small>'+(en?'Total Income':'Total Pemasukan')+'</small><b>'+rp(S.income)+'</b></div>'+
+      '<div class="box"><small>'+(en?'Total Expenses':'Total Pengeluaran')+'</small><b>'+rp(S.expense)+'</b></div>'+
+      '<div class="box"><small>'+(en?'Net Surplus':'Surplus Bersih')+'</small><b>'+rp(S.saving)+'</b></div>'+
     '</div>'+
-    '<h2>Daftar Transaksi ('+(S.transactions||[]).length+')</h2>'+
-    '<table><thead><tr><th>Tanggal</th><th>Tipe</th><th>Kategori</th><th>Dompet</th><th>Catatan</th><th class="r">Jumlah</th></tr></thead><tbody>'+rows+'</tbody></table>';
-  openPrintableHtml('Laporan ' + mName, html);
+    '<h2>'+(en?'Transactions (':'Daftar Transaksi (')+(S.transactions||[]).length+')</h2>'+
+    '<table><thead><tr><th>'+(en?'Date':'Tanggal')+'</th><th>'+(en?'Type':'Tipe')+'</th><th>'+(en?'Category':'Kategori')+'</th><th>'+(en?'Wallet':'Dompet')+'</th><th>'+(en?'Note':'Catatan')+'</th><th class="r">'+(en?'Amount':'Jumlah')+'</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  openPrintableHtml((en ? 'Report ' : 'Laporan ') + mName, html);
 }
 function exportEventPdf(evId){
   var ev = findEventById(evId);
   if(!ev) return;
+  var en = APP_LANG === 'en';
   var rows = (evDetailTxs || []).map(function(t){
     var fx = (t.currency && t.currency !== 'IDR' && t.fxAmount > 0) ? fmtFx(t.fxAmount, t.currency) : '-';
-    return '<tr><td>'+esc(t.date)+'</td><td>'+esc(t.cat)+(t.sub?' · '+esc(t.sub):'')+'</td><td>'+esc(t.wallet)+'</td><td>'+esc(t.note||'')+'</td><td class="r">'+esc(fx)+'</td><td class="r">'+rp(t.amount)+'</td></tr>';
+    return '<tr><td>'+esc(t.date)+'</td><td>'+esc(trCat(t.cat))+(t.sub?' · '+esc(trCat(t.sub)):'')+'</td><td>'+esc(t.wallet)+'</td><td>'+esc(t.note||'')+'</td><td class="r">'+esc(fx)+'</td><td class="r">'+rp(t.amount)+'</td></tr>';
   }).join('');
-  var html = '<h1>Laporan Event: '+esc(ev.icon+' '+ev.name)+'</h1><div class="sub">Periode: '+esc((ev.startDate||'-')+' s/d '+(ev.endDate||'-'))+' · Mata Uang: '+esc(ev.currency)+'</div>'+
+  var html = '<h1>'+(en?'Event Report: ':'Laporan Event: ')+esc(ev.icon+' '+ev.name)+'</h1><div class="sub">'+(en?'Period: ':'Periode: ')+esc((ev.startDate||'-')+' → '+(ev.endDate||'-'))+' · '+(en?'Currency: ':'Mata Uang: ')+esc(ev.currency)+'</div>'+
     '<div class="grid">'+
-      '<div class="box"><small>Total Pengeluaran</small><b>'+rp(ev.spent||0)+'</b></div>'+
-      '<div class="box"><small>Pemasukan / Patungan</small><b>'+rp(ev.income||0)+'</b></div>'+
-      '<div class="box"><small>Biaya Bersih (Net)</small><b>'+rp((ev.spent||0)-(ev.income||0))+'</b></div>'+
+      '<div class="box"><small>'+(en?'Total Expenses':'Total Pengeluaran')+'</small><b>'+rp(ev.spent||0)+'</b></div>'+
+      '<div class="box"><small>'+(en?'Income / Split':'Pemasukan / Patungan')+'</small><b>'+rp(ev.income||0)+'</b></div>'+
+      '<div class="box"><small>'+(en?'Net Cost':'Biaya Bersih (Net)')+'</small><b>'+rp((ev.spent||0)-(ev.income||0))+'</b></div>'+
     '</div>'+
-    '<h2>Rincian Transaksi ('+(evDetailTxs||[]).length+')</h2>'+
-    '<table><thead><tr><th>Tanggal</th><th>Kategori</th><th>Dompet</th><th>Catatan</th><th class="r">Valas</th><th class="r">Rupiah</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    '<h2>'+(en?'Transaction Details (':'Rincian Transaksi (')+(evDetailTxs||[]).length+')</h2>'+
+    '<table><thead><tr><th>'+(en?'Date':'Tanggal')+'</th><th>'+(en?'Category':'Kategori')+'</th><th>'+(en?'Wallet':'Dompet')+'</th><th>'+(en?'Note':'Catatan')+'</th><th class="r">'+(en?'FX':'Valas')+'</th><th class="r">IDR</th></tr></thead><tbody>'+rows+'</tbody></table>';
   openPrintableHtml('Event ' + ev.name, html);
 }
 
@@ -6934,9 +6978,10 @@ function renderOfflineBar(){
   var isOff = typeof navigator !== 'undefined' && navigator.onLine === false;
   if(!q.length && !isOff){ bar.classList.remove('on'); return; }
   bar.classList.add('on');
+  var en = APP_LANG === 'en';
   txt.textContent = isOff
-    ? ('📶 Offline' + (q.length ? ' · ' + q.length + ' transaksi menunggu sync' : ' · Transaksi baru akan diantrekan'))
-    : ('⏳ ' + q.length + ' transaksi offline siap disinkronkan');
+    ? ('📶 Offline' + (q.length ? ' · ' + q.length + (en ? ' pending sync' : ' transaksi menunggu sync') : (en ? ' · New transactions will be queued' : ' · Transaksi baru akan diantrekan')))
+    : ('⏳ ' + q.length + (en ? ' offline transactions ready to sync' : ' transaksi offline siap disinkronkan'));
 }
 function syncOfflineQueue(manual){
   var q = readOfflineQueue();
@@ -7032,9 +7077,10 @@ function setLapTab(tab){
 }
 function renderTrend3(){
   if(!S || !$('trend3ChartBox')) return;
+  var en = APP_LANG === 'en';
   var list = S.trend3 || [];
   if(!list.length){
-    $('trend3ChartBox').innerHTML = '<div class="empty" style="padding:16px">Belum ada data tren 3 bulan</div>';
+    $('trend3ChartBox').innerHTML = '<div class="empty" style="padding:16px">'+(en?'No 3-month trend data yet':'Belum ada data tren 3 bulan')+'</div>';
     $('trend3CardsBox').innerHTML = '';
     return;
   }
@@ -7051,7 +7097,7 @@ function renderTrend3(){
   }).join('');
   $('trend3ChartBox').innerHTML =
     '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;color:var(--muted)">'+bars+'</svg>'+
-    '<div class="legend"><span><s style="background:#10b981"></s>'+(APP_LANG==='en'?'Income':'Pemasukan')+'</span><span><s style="background:#ef4444"></s>'+(APP_LANG==='en'?'Expense':'Pengeluaran')+'</span></div>';
+    '<div class="legend"><span><s style="background:#10b981"></s>'+(en?'Income':'Pemasukan')+'</span><span><s style="background:#ef4444"></s>'+(en?'Expense':'Pengeluaran')+'</span></div>';
 
   $('trend3CardsBox').innerHTML = '<div class="trend-cards">' + list.map(function(it){
     var mLbl = BLN[+it.ym.slice(5,7) - 1].slice(0,3);
@@ -7113,18 +7159,19 @@ function populateRecSelects(){
 function renderRecList(){
   var box = $('recListBox');
   if(!box || !S) return;
+  var en = APP_LANG === 'en';
   var list = S.recurring || [];
   if(!list.length){
-    box.innerHTML = '<div class="empty" style="padding:16px">Belum ada tagihan atau transaksi rutin.</div>';
+    box.innerHTML = '<div class="empty" style="padding:16px">'+(en?'No recurring bills or transactions yet.':'Belum ada tagihan atau transaksi rutin.')+'</div>';
     return;
   }
   box.innerHTML = list.map(function(r){
     var paid = r.lastPaidYm === S.ym;
     return '<div class="drow">'+
       '<div class="ico">'+iconOf(r.cat, r.type, r.sub)+'</div>'+
-      '<div class="mid"><b>'+esc(r.name)+'</b><small>Tgl '+r.day+' · '+esc(r.wallet)+' · '+mk(rp(r.amount))+(paid?' · ✅ Sudah bulan ini':'')+'</small></div>'+
+      '<div class="mid"><b>'+esc(r.name)+'</b><small>'+(en?'Day ':'Tgl ')+r.day+' · '+esc(r.wallet)+' · '+mk(rp(r.amount))+(paid?(en?' · ✅ Paid this month':' · ✅ Sudah bulan ini'):'')+'</small></div>'+
       '<div style="display:flex;gap:6px;align-items:center">'+
-        (!paid ? '<button type="button" class="rec-pay-btn" onclick="payRecurringUi(\''+esc(r.id)+'\')">Catat</button>' : '')+
+        (!paid ? '<button type="button" class="rec-pay-btn" onclick="payRecurringUi(\''+esc(r.id)+'\')">'+(en?'Log':'Catat')+'</button>' : '')+
         '<button type="button" class="link" style="color:var(--red)" onclick="deleteRecurringUi(\''+esc(r.id)+'\')">🗑</button>'+
       '</div>'+
     '</div>';
@@ -7136,7 +7183,8 @@ function saveRecForm(){
   var day = Math.min(31, Math.max(1, Math.round(Number($('recDayIn').value) || 1)));
   if(!name){ toast('Isi nama tagihan/rutin dulu'); return; }
   if(amt <= 0){ toast('Nominal harus lebih dari 0'); return; }
-  var btn = $('recSaveBtn'); btn.disabled = true; btn.textContent = 'Menyimpan…';
+  var en = APP_LANG === 'en';
+  var btn = $('recSaveBtn'); btn.disabled = true; btn.textContent = en ? 'Saving…' : 'Menyimpan…';
   setSyncing(true, 'Menyimpan…');
   call('saveRecurring', {
     name: name, type: recFormType, cat: $('recCatIn').value, sub: '',
@@ -7190,10 +7238,11 @@ function deleteRecurringUi(id){
     var dy = e.touches[0].clientY - startY;
     var bar = $('ptrBar');
     if(!bar) return;
+    var en = APP_LANG === 'en';
     if(dy > 45 && window.scrollY <= 4){
       bar.classList.add('show');
-      if(dy > 85){ ready = true; bar.textContent = '✨ Lepas untuk menyegarkan…'; }
-      else { ready = false; bar.textContent = '🔄 Tarik untuk menyegarkan…'; }
+      if(dy > 85){ ready = true; bar.textContent = en ? '✨ Release to refresh…' : '✨ Lepas untuk menyegarkan…'; }
+      else { ready = false; bar.textContent = en ? '🔄 Pull to refresh…' : '🔄 Tarik untuk menyegarkan…'; }
     } else if(dy <= 10){
       bar.classList.remove('show');
     }
