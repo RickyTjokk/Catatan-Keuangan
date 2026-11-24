@@ -348,6 +348,74 @@ button{border:0;background:none;cursor:pointer}
   color:var(--green);border:1.5px solid var(--green);border-radius:14px;padding:13px;font-weight:700;font-size:14px;margin-top:6px}
 .exp-btn:active{transform:scale(.98);opacity:.85}
 .exp-btn[disabled]{opacity:.55}
+/* welcome onboarding wizard (3 langkah - opsi B) */
+#onbBg{position:fixed;inset:0;background:rgba(15,18,35,.58);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  opacity:0;pointer-events:none;transition:opacity .25s;z-index:60}
+#onbBg.open{opacity:1;pointer-events:auto}
+#onbModal{position:fixed;left:50%;top:50%;width:calc(100% - 28px);max-width:440px;max-height:88vh;
+  transform:translate(-50%,-46%) scale(.96);opacity:0;pointer-events:none;z-index:61;
+  background:var(--card);border:1px solid var(--line);border-radius:26px;
+  box-shadow:0 22px 54px rgba(15,20,50,.32);display:flex;flex-direction:column;overflow:hidden;
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .22s}
+#onbModal.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}
+.onb-head{padding:16px 18px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.onb-prog-wrap{flex:1;min-width:0}
+.onb-step-lbl{font-size:11.5px;font-weight:700;color:var(--primary);margin-bottom:6px;letter-spacing:.2px}
+.onb-prog{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.onb-prog i{display:block;height:5px;border-radius:99px;background:var(--line);transition:background .25s}
+.onb-prog i.done{background:var(--primary);opacity:.45}
+.onb-prog i.act{background:var(--primary)}
+.onb-skip{font-size:13px;font-weight:600;color:var(--muted);padding:6px 10px;border-radius:10px}
+.onb-skip:active{background:var(--primary-soft);color:var(--primary)}
+.onb-body{padding:18px;overflow-y:auto;flex:1}
+.onb-hero{text-align:center;margin-bottom:16px}
+.onb-badge{width:64px;height:64px;border-radius:22px;margin:0 auto 12px;display:grid;place-items:center;font-size:32px;
+  background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;box-shadow:0 10px 24px rgba(79,70,229,.32)}
+.onb-hero h2{margin:0 0 6px;font-size:19px;font-weight:800;line-height:1.25}
+.onb-hero p{margin:0;font-size:13px;color:var(--muted);line-height:1.45}
+.onb-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-bottom:16px}
+.onb-pill{font-size:11.5px;font-weight:700;padding:6px 10px;border-radius:999px;background:var(--primary-soft);color:var(--primary)}
+.onb-box{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:12px}
+.onb-box:last-child{margin-bottom:0}
+.onb-box-title{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px}
+.onb-wal-chips{display:flex;flex-wrap:wrap;gap:6px}
+.onb-wal-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:12px;
+  background:var(--card);border:1px solid var(--line);font-size:12.5px;font-weight:600}
+.onb-wal-chip small{color:var(--muted);font-weight:500}
+.onb-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.onb-preset{padding:6px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);
+  font-size:12px;font-weight:600;transition:.15s}
+.onb-preset:active,.onb-preset.on{background:var(--primary-soft);border-color:var(--primary);color:var(--primary)}
+.onb-inp-row{display:flex;gap:8px;margin-bottom:8px}
+.onb-inp{width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;
+  font-size:14px;font-weight:600;outline:none}
+.onb-inp:focus{border-color:var(--primary)}
+.onb-add-btn{width:100%;padding:10px 14px;border-radius:12px;background:var(--primary-soft);color:var(--primary);
+  font-size:13.5px;font-weight:700;transition:.15s}
+.onb-add-btn:active{transform:scale(.98);opacity:.85}
+.onb-add-btn[disabled]{opacity:.55}
+.onb-bud-row{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:14px;background:var(--card);
+  border:1px solid var(--line);margin-bottom:8px}
+.onb-bud-row:last-child{margin-bottom:0}
+.onb-bud-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.onb-bud-cat{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;min-width:0}
+.onb-bud-cat span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.onb-bud-inp{width:132px;text-align:right;background:var(--bg);border:1px solid var(--line);border-radius:10px;
+  padding:7px 10px;font-size:13.5px;font-weight:700;outline:none}
+.onb-bud-inp:focus{border-color:var(--primary)}
+.onb-bud-chips{display:flex;gap:6px;flex-wrap:wrap}
+.onb-bud-chips button{padding:4px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--line);
+  font-size:11.5px;font-weight:600;color:var(--muted)}
+.onb-bud-chips button:active{background:var(--primary-soft);color:var(--primary);border-color:var(--primary)}
+.onb-foot{padding:12px 18px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;background:var(--card)}
+.onb-btn-back{padding:12px 16px;border-radius:14px;background:var(--bg);border:1px solid var(--line);
+  font-size:14px;font-weight:700;color:var(--text)}
+.onb-btn-next{flex:1;padding:12px 18px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);
+  color:#fff;font-size:14.5px;font-weight:700;box-shadow:0 6px 18px rgba(79,70,229,.28);transition:.15s}
+.onb-btn-next:active{transform:scale(.98);opacity:.92}
+.onb-btn-next[disabled]{opacity:.55}
+.onb-sec-link{display:block;width:100%;text-align:center;margin-top:10px;font-size:13px;font-weight:700;color:var(--primary);padding:6px}
 /* pop-up edit transaksi */
 #editBg{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .25s;z-index:30}
 #editBg.open{opacity:1;pointer-events:auto}
@@ -1619,6 +1687,14 @@ nav button.fab{margin-top:0;width:54px;height:54px;border:0}
       </div>
       <span class="chev">›</span>
     </button>
+    <button type="button" class="catbtn" style="margin-top:8px" onclick="openOnboardingFromProfile()">
+      <div class="ico">👋</div>
+      <div class="cmid">
+        <b id="profOnbTitle">Panduan Awal (Onboarding)</b>
+        <small id="profOnbSub">Atur ulang bahasa, tema, dompet &amp; budget awal</small>
+      </div>
+      <span class="chev">›</span>
+    </button>
   </div>
   <div class="card" style="margin-bottom:12px">
     <h3 id="prefSecTitle">Tampilan &amp; Bahasa</h3>
@@ -1653,6 +1729,22 @@ nav button.fab{margin-top:0;width:54px;height:54px;border:0}
       📥 <span id="expBtnTxt">Export Data ke Excel (.xls)</span>
     </button>
   </div>
+</div>
+
+<!-- MODAL WELCOME ONBOARDING WIZARD (3 LANGKAH - OPSI B) -->
+<div id="onbBg" onclick="closeOnboarding(true)"></div>
+<div id="onbModal" role="dialog" aria-modal="true" aria-label="Welcome Onboarding Wizard">
+  <div class="onb-head">
+    <div class="onb-prog-wrap">
+      <div class="onb-step-lbl" id="onbStepLbl">Langkah 1 dari 3</div>
+      <div class="onb-prog" id="onbProg">
+        <i class="act"></i><i></i><i></i>
+      </div>
+    </div>
+    <button type="button" class="onb-skip" id="onbSkipBtn" onclick="closeOnboarding(true)">Lewati</button>
+  </div>
+  <div class="onb-body" id="onbBody"></div>
+  <div class="onb-foot" id="onbFoot"></div>
 </div>
 
 <!-- MODAL PENGATURAN DOMPET (SESUAIKAN SALDO, SALDO AWAL & HAPUS DOMPET) -->
@@ -2647,6 +2739,9 @@ function applyLang(){
   if($('profEvSub')) $('profEvSub').textContent = en ? 'Track holidays, special events & foreign currencies' : 'Catat liburan, acara khusus & kurs mata uang asing';
   if($('profRecTitle')) $('profRecTitle').textContent = en ? 'Recurring & Bills' : 'Tagihan & Transaksi Rutin';
   if($('profRecSub')) $('profRecSub').textContent = en ? 'Due reminders & 1-tap bill logging' : 'Pengingat jatuh tempo & catat tagihan 1-tap';
+  if($('profOnbTitle')) $('profOnbTitle').textContent = en ? 'Welcome Wizard (Onboarding)' : 'Panduan Awal (Onboarding)';
+  if($('profOnbSub')) $('profOnbSub').textContent = en ? 'Replay language, theme, wallet & budget setup' : 'Atur ulang bahasa, tema, dompet & budget awal';
+  if($('onbModal') && $('onbModal').classList.contains('open') && typeof renderOnboarding === 'function') renderOnboarding();
   if($('segLapMonBtn')) $('segLapMonBtn').textContent = en ? '📊 This Month' : '📊 Bulan Ini';
   if($('segLapTrdBtn')) $('segLapTrdBtn').textContent = en ? '📈 3-Mo Trend' : '📈 Tren 3 Bulan';
   if($('lblTrend3Title')) $('lblTrend3Title').textContent = en ? '📈 Income vs Expense (3 Months)' : '📈 Pemasukan vs Pengeluaran (3 Bulan)';
@@ -3014,6 +3109,7 @@ function load(ym){
       $('loader').classList.add('off');
       setSyncing(false);
       prefetchPrevMonth(d.ym);
+      if(typeof maybeShowOnboarding === 'function') maybeShowOnboarding();
     })
     .catch(function(e){
       if(seq !== activeLoadSeq) return;
@@ -5366,6 +5462,7 @@ function padDone(){
   if(cb) cb(r);
 }
 document.addEventListener('keydown', function(e){
+  if($('onbModal') && $('onbModal').classList.contains('open') && e.key==='Escape'){ closeOnboarding(true); return; }
   if($('profModal').classList.contains('open') && e.key==='Escape'){ closeProfileModal(); return; }
   if($('confirmSheet').classList.contains('open') && e.key==='Escape'){ closeConfirmSheet(); return; }
   if($('catAddModal').classList.contains('open') && e.key==='Escape'){ closeCatAddModal(); return; }
@@ -7024,7 +7121,7 @@ window.addEventListener('offline', function(){ renderOfflineBar(); });
     if(!e.touches || e.touches.length !== 1) return;
     var tag = (e.target && e.target.tagName) || '';
     if(/INPUT|TEXTAREA|SELECT|BUTTON/.test(tag)) return;
-    if(document.querySelector('#edit.open,#pad.open,#evModal.open,#evDetailModal.open,#filterModal.open,#profModal.open,#catModal.open')) return;
+    if(document.querySelector('#edit.open,#pad.open,#evModal.open,#evDetailModal.open,#filterModal.open,#profModal.open,#catModal.open,#onbModal.open')) return;
     var curView = document.querySelector('.view.on');
     if(curView && curView.id === 'v-add') return;
     sx = e.touches[0].clientX;
@@ -7229,7 +7326,7 @@ function deleteRecurringUi(id){
   var startY = 0, pulling = false, ready = false;
   document.addEventListener('touchstart', function(e){
     if(window.scrollY > 4 || !e.touches || e.touches.length !== 1) return;
-    if(document.querySelector('#edit.open,#pad.open,#evModal.open,#evDetailModal.open,#budDetailModal.open,#walletOptModal.open,#filterModal.open,#profModal.open,#catModal.open,#recModal.open')) return;
+    if(document.querySelector('#edit.open,#pad.open,#evModal.open,#evDetailModal.open,#budDetailModal.open,#walletOptModal.open,#filterModal.open,#profModal.open,#catModal.open,#recModal.open,#onbModal.open')) return;
     startY = e.touches[0].clientY;
     pulling = true; ready = false;
   }, { passive: true });
@@ -7258,6 +7355,294 @@ function deleteRecurringUi(id){
     }
   }, { passive: true });
 })();
+
+/* ===== WELCOME ONBOARDING WIZARD 3 LANGKAH (OPSI B) ===== */
+var ONB_KEY = 'ck_onboarded_v1';
+var onbStep = 1;
+var onbWalIcon = '💵';
+var onbWalNameDraft = '';
+var onbWalBalDraft = '';
+var onbBudDraft = {};
+var onbSaving = false;
+
+function maybeShowOnboarding(){
+  try {
+    if(localStorage.getItem(ONB_KEY) === '1') return;
+  } catch(e) { return; }
+  if(!S) return;
+  if($('onbModal') && !$('onbModal').classList.contains('open')){
+    openOnboarding(1);
+  }
+}
+function openOnboardingFromProfile(){
+  closeProfileModal();
+  openOnboarding(1);
+}
+function openOnboarding(startStep){
+  onbStep = startStep || 1;
+  onbWalIcon = '💵';
+  onbWalNameDraft = '';
+  onbWalBalDraft = '';
+  onbBudDraft = {};
+  renderOnboarding();
+  if($('onbBg')) $('onbBg').classList.add('open');
+  if($('onbModal')) $('onbModal').classList.add('open');
+}
+function closeOnboarding(markDone){
+  if(markDone){
+    try { localStorage.setItem(ONB_KEY, '1'); } catch(e) {}
+  }
+  if($('onbBg')) $('onbBg').classList.remove('open');
+  if($('onbModal')) $('onbModal').classList.remove('open');
+}
+function onbNext(){
+  if(onbStep < 3){
+    onbStep++;
+    renderOnboarding();
+    if($('onbBody')) $('onbBody').scrollTop = 0;
+  } else {
+    onbFinish(false);
+  }
+}
+function onbPrev(){
+  if(onbStep > 1){
+    onbStep--;
+    renderOnboarding();
+    if($('onbBody')) $('onbBody').scrollTop = 0;
+  }
+}
+function onbPickPreset(icon, name){
+  onbWalIcon = icon;
+  onbWalNameDraft = name;
+  var inp = $('onbWalName');
+  if(inp){ inp.value = name; inp.focus(); }
+  document.querySelectorAll('.onb-preset').forEach(function(b){
+    b.classList.toggle('on', b.dataset.n === name);
+  });
+}
+function onbAddWallet(){
+  if(onbSaving || !S) return;
+  var en = APP_LANG === 'en';
+  var name = ($('onbWalName') ? $('onbWalName').value : onbWalNameDraft).trim();
+  if(!name){
+    toast(en ? 'Please enter a wallet name first' : 'Isi nama dompet dulu ya');
+    if($('onbWalName')) $('onbWalName').focus();
+    return;
+  }
+  var rawBal = $('onbWalBal') ? $('onbWalBal').value : onbWalBalDraft;
+  var opening = Number(String(rawBal || '').replace(/\D/g, '')) || 0;
+  var btn = $('onbWalAddBtn');
+  onbSaving = true;
+  if(btn){ btn.disabled = true; btn.textContent = en ? 'Saving…' : 'Menyimpan…'; }
+  setSyncing(true, 'Menyimpan…');
+  call('addWallet', { name: name, icon: onbWalIcon || '💵', logoData: '', opening: opening }, S.ym)
+    .then(function(d){
+      commitData(d);
+      onbWalNameDraft = '';
+      onbWalBalDraft = '';
+      setSyncing(false);
+      toast(en ? ('Wallet "' + name + '" added ✅') : ('Dompet "' + name + '" ditambahkan ✅'));
+      renderOnboarding();
+    })
+    .catch(function(e){
+      setSyncing(false);
+      toast((en ? 'Failed: ' : 'Gagal: ') + (e.message || e));
+    })
+    .then(function(){
+      onbSaving = false;
+      if(btn && $('onbWalAddBtn')){
+        btn.disabled = false;
+        btn.textContent = en ? '+ Add Wallet' : '+ Tambah Dompet';
+      }
+    });
+}
+function onbSetBudPreset(cat, val){
+  onbBudDraft[cat] = val;
+  var inp = document.querySelector('.onb-bud-inp[data-cat="' + cat.replace(/"/g, '\\"') + '"]');
+  if(inp) inp.value = val ? String(val) : '';
+}
+function onbTopBudgetCats(){
+  var cats = (S && S.kategori && S.kategori.out) ? S.kategori.out : [];
+  if(cats.length) return cats.slice(0, 3);
+  return [
+    { n: 'Makan & Minum', i: '🍽️' },
+    { n: 'Transportasi', i: '🚗' },
+    { n: 'Belanja', i: '🛍️' }
+  ];
+}
+function onbFinish(goAdd){
+  if(onbSaving) return;
+  var en = APP_LANG === 'en';
+  var entries = [];
+  if(S){
+    document.querySelectorAll('.onb-bud-inp').forEach(function(inp){
+      var cat = inp.dataset.cat;
+      var v = Math.round(Number(String(inp.value || '').replace(/\D/g, '')) || 0);
+      var cur = Number((S.budgets || {})[cat]) || 0;
+      if(cat && v > 0 && v !== cur){
+        entries.push({ cat: cat, val: v });
+      }
+    });
+  }
+  if(!entries.length){
+    closeOnboarding(true);
+    toast(en ? 'Ready to track! 🎉' : 'Selamat mencatat! 🎉');
+    if(goAdd) go('add');
+    return;
+  }
+  onbSaving = true;
+  var nextBtn = $('onbNextBtn');
+  if(nextBtn){ nextBtn.disabled = true; nextBtn.textContent = en ? 'Saving…' : 'Menyimpan…'; }
+  setSyncing(true, 'Menyimpan…');
+  var chain = Promise.resolve();
+  entries.forEach(function(item){
+    chain = chain.then(function(){
+      return call('setBudget', item.cat, item.val, S.ym).then(function(d){ commitData(d); });
+    });
+  });
+  chain
+    .then(function(){
+      setSyncing(false);
+      closeOnboarding(true);
+      toast(en ? 'Setup saved! Happy tracking 🎉' : 'Pengaturan tersimpan! Selamat mencatat 🎉');
+      if(goAdd) go('add');
+    })
+    .catch(function(e){
+      setSyncing(false);
+      toast((en ? 'Failed: ' : 'Gagal: ') + (e.message || e));
+    })
+    .then(function(){
+      onbSaving = false;
+      if(nextBtn && $('onbNextBtn')){
+        nextBtn.disabled = false;
+        nextBtn.textContent = en ? 'Start Tracking 🚀' : 'Mulai Mencatat 🚀';
+      }
+    });
+}
+function renderOnboarding(){
+  var body = $('onbBody'), foot = $('onbFoot');
+  if(!body || !foot) return;
+  var en = APP_LANG === 'en';
+  if($('onbStepLbl')) $('onbStepLbl').textContent = en ? ('Step ' + onbStep + ' of 3') : ('Langkah ' + onbStep + ' dari 3');
+  if($('onbSkipBtn')) $('onbSkipBtn').textContent = en ? 'Skip' : 'Lewati';
+  var progBars = document.querySelectorAll('#onbProg i');
+  progBars.forEach(function(el, idx){
+    var n = idx + 1;
+    el.classList.toggle('done', n < onbStep);
+    el.classList.toggle('act', n === onbStep);
+  });
+
+  if(onbStep === 1){
+    body.innerHTML =
+      '<div class="onb-hero">' +
+        '<div class="onb-badge">💰</div>' +
+        '<h2>' + (en ? 'Welcome to Catatan Keuangan!' : 'Selamat Datang di Catatan Keuangan!') + '</h2>' +
+        '<p>' + (en ? 'Set your language and theme first, then get your wallets and monthly budgets ready in seconds.' : 'Atur bahasa dan tema tampilan dulu, lalu siapkan dompet dan budget bulananmu dalam hitungan detik.') + '</p>' +
+      '</div>' +
+      '<div class="onb-pills">' +
+        '<span class="onb-pill">📸 ' + (en ? 'AI Receipt Scan' : 'Scan Struk AI') + '</span>' +
+        '<span class="onb-pill">🎙️ ' + (en ? 'Voice Input' : 'Catat Suara') + '</span>' +
+        '<span class="onb-pill">📊 ' + (en ? 'Budget Pacing' : 'Budget Pacing') + '</span>' +
+      '</div>' +
+      '<div class="onb-box">' +
+        '<div class="set-row" style="padding-top:2px">' +
+          '<div class="sl"><b>' + (en ? 'Language' : 'Bahasa') + '</b><small>' + (en ? 'Choose interface language' : 'Pilih bahasa aplikasi') + '</small></div>' +
+          '<div class="set-seg">' +
+            '<button type="button" class="' + (APP_LANG==='id'?'on':'') + '" onclick="setLang(\'id\')">🇮🇩 ID</button>' +
+            '<button type="button" class="' + (APP_LANG==='en'?'on':'') + '" onclick="setLang(\'en\')">🇬🇧 EN</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="set-row" style="padding-bottom:2px">' +
+          '<div class="sl"><b>' + (en ? 'Theme' : 'Tema Tampilan') + '</b><small>' + (en ? 'Light, dark, or follow device' : 'Terang, gelap, atau ikuti HP') + '</small></div>' +
+          '<div class="set-seg">' +
+            '<button type="button" class="' + (APP_THEME==='auto'?'on':'') + '" onclick="setTheme(\'auto\');renderOnboarding()">Auto</button>' +
+            '<button type="button" class="' + (APP_THEME==='light'?'on':'') + '" onclick="setTheme(\'light\');renderOnboarding()">☀️</button>' +
+            '<button type="button" class="' + (APP_THEME==='dark'?'on':'') + '" onclick="setTheme(\'dark\');renderOnboarding()">🌙</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    foot.innerHTML =
+      '<button type="button" class="onb-btn-next" id="onbNextBtn" onclick="onbNext()">' + (en ? 'Next: Wallets →' : 'Lanjut: Dompet →') + '</button>';
+    return;
+  }
+
+  if(onbStep === 2){
+    var wallets = (S && S.dompet) ? S.dompet : [];
+    var walHtml = wallets.length
+      ? wallets.map(function(w){
+          return '<span class="onb-wal-chip">' + (w.i || '💳') + ' ' + esc(w.n) + ' <small>' + rp(w.balance || 0) + '</small></span>';
+        }).join('')
+      : '<span style="font-size:12.5px;color:var(--muted)">' + (en ? 'No wallets yet. Add one below!' : 'Belum ada dompet. Tambahkan di bawah!') + '</span>';
+    var presets = [
+      { i: '💵', n: en ? 'Cash' : 'Tunai' },
+      { i: '🏦', n: 'BCA' },
+      { i: '🏦', n: 'Mandiri' },
+      { i: '📱', n: 'GoPay' },
+      { i: '📱', n: 'OVO' },
+      { i: '💳', n: en ? 'Credit Card' : 'Kartu Kredit' }
+    ];
+    body.innerHTML =
+      '<div class="onb-hero" style="margin-bottom:12px">' +
+        '<div class="onb-badge" style="width:52px;height:52px;font-size:26px;border-radius:18px;margin-bottom:8px">👛</div>' +
+        '<h2>' + (en ? 'Your Wallets & Balances' : 'Dompet & Saldo Awal') + '</h2>' +
+        '<p>' + (en ? 'Review your active wallets or quickly add a new one with its starting balance.' : 'Cek dompet aktifmu atau tambah dompet baru beserta saldo awalnya.') + '</p>' +
+      '</div>' +
+      '<div class="onb-box">' +
+        '<div class="onb-box-title">' + (en ? 'Active Wallets (' + wallets.length + ')' : 'Dompet Aktif (' + wallets.length + ')') + '</div>' +
+        '<div class="onb-wal-chips">' + walHtml + '</div>' +
+      '</div>' +
+      '<div class="onb-box">' +
+        '<div class="onb-box-title">' + (en ? 'Quick Add Wallet (Optional)' : 'Tambah Dompet Cepat (Opsional)') + '</div>' +
+        '<div class="onb-presets">' +
+          presets.map(function(p){
+            return '<button type="button" class="onb-preset' + (onbWalNameDraft===p.n?' on':'') + '" data-n="' + esc(p.n) + '" onclick="onbPickPreset(\'' + p.i + '\',\'' + esc(p.n) + '\')">' + p.i + ' ' + esc(p.n) + '</button>';
+          }).join('') +
+        '</div>' +
+        '<div class="onb-inp-row">' +
+          '<input id="onbWalName" class="onb-inp" type="text" maxlength="28" placeholder="' + (en ? 'Wallet name (e.g. BCA)' : 'Nama dompet (mis. BCA)') + '" value="' + esc(onbWalNameDraft) + '" oninput="onbWalNameDraft=this.value">' +
+          '<input id="onbWalBal" class="onb-inp" type="number" inputmode="numeric" placeholder="' + (en ? 'Balance (Rp)' : 'Saldo awal') + '" value="' + esc(onbWalBalDraft) + '" oninput="onbWalBalDraft=this.value">' +
+        '</div>' +
+        '<button type="button" class="onb-add-btn" id="onbWalAddBtn" onclick="onbAddWallet()">' + (en ? '+ Add Wallet' : '+ Tambah Dompet') + '</button>' +
+      '</div>';
+    foot.innerHTML =
+      '<button type="button" class="onb-btn-back" onclick="onbPrev()">← ' + (en ? 'Back' : 'Kembali') + '</button>' +
+      '<button type="button" class="onb-btn-next" id="onbNextBtn" onclick="onbNext()">' + (en ? 'Next: Budget →' : 'Lanjut: Budget →') + '</button>';
+    return;
+  }
+
+  var topCats = onbTopBudgetCats();
+  var budRowsHtml = topCats.map(function(c){
+    var existing = Number((S && S.budgets && S.budgets[c.n]) || 0);
+    var draftVal = onbBudDraft.hasOwnProperty(c.n) ? onbBudDraft[c.n] : existing;
+    var valStr = draftVal > 0 ? String(draftVal) : '';
+    var safeCat = esc(c.n);
+    return '<div class="onb-bud-row">' +
+      '<div class="onb-bud-top">' +
+        '<div class="onb-bud-cat"><span>' + (c.i || '🏷️') + ' ' + esc(trCat(c.n)) + '</span></div>' +
+        '<input type="number" inputmode="numeric" class="onb-bud-inp" data-cat="' + safeCat + '" placeholder="Rp 0" value="' + esc(valStr) + '" oninput="onbBudDraft[this.dataset.cat]=Number(this.value)||0">' +
+      '</div>' +
+      '<div class="onb-bud-chips">' +
+        '<button type="button" onclick="onbSetBudPreset(\'' + safeCat + '\',500000)">500rb</button>' +
+        '<button type="button" onclick="onbSetBudPreset(\'' + safeCat + '\',1000000)">1jt</button>' +
+        '<button type="button" onclick="onbSetBudPreset(\'' + safeCat + '\',2000000)">2jt</button>' +
+        '<button type="button" onclick="onbSetBudPreset(\'' + safeCat + '\',3000000)">3jt</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  body.innerHTML =
+    '<div class="onb-hero" style="margin-bottom:12px">' +
+      '<div class="onb-badge" style="width:52px;height:52px;font-size:26px;border-radius:18px;margin-bottom:8px">🎯</div>' +
+      '<h2>' + (en ? 'Monthly Budget (Optional)' : 'Target Budget Bulanan (Opsional)') + '</h2>' +
+      '<p>' + (en ? 'Set spending limits on your top categories, or skip and adjust anytime in the Budget tab.' : 'Tentukan batas pengeluaran kategori utama, atau lewati dan atur kapan saja di tab Budget.') + '</p>' +
+    '</div>' +
+    '<div class="onb-box">' + budRowsHtml + '</div>' +
+    '<button type="button" class="onb-sec-link" onclick="onbFinish(true)">' + (en ? '+ Log My First Transaction' : '+ Langsung Catat Transaksi Pertama') + '</button>';
+
+  foot.innerHTML =
+    '<button type="button" class="onb-btn-back" onclick="onbPrev()">← ' + (en ? 'Back' : 'Kembali') + '</button>' +
+    '<button type="button" class="onb-btn-next" id="onbNextBtn" onclick="onbFinish(false)">' + (en ? 'Start Tracking 🚀' : 'Mulai Mencatat 🚀') + '</button>';
+}
 
 /* Inisialisasi Tema, Bahasa, Ikon PNG iOS & Muat Data */
 applyTheme(APP_THEME);
