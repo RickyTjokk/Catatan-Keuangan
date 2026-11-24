@@ -349,9 +349,9 @@ button{border:0;background:none;cursor:pointer}
 .exp-btn:active{transform:scale(.98);opacity:.85}
 .exp-btn[disabled]{opacity:.55}
 /* welcome onboarding wizard (3 langkah - opsi B) */
-#onbBg{position:fixed;inset:0;background:rgba(15,18,35,.58);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+#onbBg{position:fixed;inset:0;background:rgba(15,18,35,.58);
   opacity:0;pointer-events:none;transition:opacity .25s;z-index:60}
-#onbBg.open{opacity:1;pointer-events:auto}
+#onbBg.open{opacity:1;pointer-events:auto;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 #onbModal{position:fixed;left:50%;top:50%;width:calc(100% - 28px);max-width:440px;max-height:88vh;
   transform:translate(-50%,-46%) scale(.96);opacity:0;pointer-events:none;z-index:61;
   background:var(--card);border:1px solid var(--line);border-radius:26px;
@@ -830,11 +830,12 @@ nav button:not(.fab) svg{width:21px;height:21px}
 nav button.on:not(.fab){background:rgba(79,70,229,.14)}
 nav button.fab{margin-top:0;width:54px;height:54px;border:0}
 
-/* bottom sheet */
+/* bottom sheet (backdrop-filter hanya saat terbuka agar GPU iOS tetap ringan) */
 #edit,#pad,#catAddModal,#budAddModal,#budDetailModal,#walletAddModal,#walletOptModal,#confirmSheet,#profModal,#filterModal{
   background:var(--glass-strong);border-top:1px solid var(--glass-brd);
-  -webkit-backdrop-filter:blur(28px) saturate(1.8);backdrop-filter:blur(28px) saturate(1.8);
   box-shadow:var(--glass-hi),0 -10px 40px rgba(0,0,0,.2)}
+#edit.open,#pad.open,#catAddModal.open,#budAddModal.open,#budDetailModal.open,#walletAddModal.open,#walletOptModal.open,#confirmSheet.open,#profModal.open,#filterModal.open,#recModal.open,#evModal.open,#evDetailModal.open{
+  -webkit-backdrop-filter:blur(24px) saturate(1.7);backdrop-filter:blur(24px) saturate(1.7)}
 
 /* fallback */
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
@@ -1199,32 +1200,29 @@ nav button.fab svg{transition:transform .38s var(--spring)}
 
 /* 6. Native Bottom Sheets, Bulletproof Modal Hiding, Grabber Handle & Bouncy Spring */
 #catModal{
-  transform:translateY(calc(100% + 60px));opacity:0;visibility:hidden;pointer-events:none;
-  transition:transform .32s var(--ease-out),opacity .2s,visibility 0s linear .32s !important;
+  transform:translate3d(0,105%,0);visibility:hidden;pointer-events:none;
+  transition:transform .3s var(--ease-out),visibility 0s linear .3s !important;
 }
 #catModal.open{
-  transform:none;opacity:1;visibility:visible;pointer-events:auto;
-  transition:transform .32s var(--ease-out),opacity .18s,visibility 0s !important;
+  transform:translate3d(0,0,0);visibility:visible;pointer-events:auto;
+  transition:transform .3s var(--ease-out),visibility 0s !important;
 }
 #onbModal{visibility:hidden}
 #onbModal.open{visibility:visible}
 #edit,#pad,#catAddModal,#budAddModal,#budDetailModal,#walletAddModal,#walletOptModal,#confirmSheet,#profModal,#filterModal,#recModal,#evModal,#evDetailModal{
-  transform:translateY(calc(100% + 48px));
-  opacity:0;
+  transform:translate3d(0,calc(100% + 48px),0);
   visibility:hidden;
   pointer-events:none;
-  transition:transform .36s var(--ease-out),opacity .2s,visibility 0s linear .36s !important;
+  transition:transform .34s var(--ease-out),visibility 0s linear .34s !important;
 }
 #edit.open,#pad.open,#catAddModal.open,#budAddModal.open,#budDetailModal.open,#walletAddModal.open,#walletOptModal.open,#confirmSheet.open,#profModal.open,#filterModal.open,#recModal.open,#evModal.open,#evDetailModal.open{
-  transform:none !important;
-  opacity:1;
+  transform:translate3d(0,0,0) !important;
   visibility:visible;
   pointer-events:auto;
-  transition:transform .36s var(--ease-out),opacity .18s,visibility 0s !important;
+  transition:transform .34s var(--ease-out),visibility 0s !important;
 }
 #recModal,#evModal,#evDetailModal{
   background:var(--glass-strong);border-top:1px solid var(--glass-brd);
-  -webkit-backdrop-filter:blur(28px) saturate(1.8);backdrop-filter:blur(28px) saturate(1.8);
   box-shadow:var(--glass-hi),0 -10px 40px rgba(0,0,0,.2);
 }
 #fabBg.on,#profBg.open,#editBg.open,#filterBg.open,#budDetailBg.open,#recBg.open,#evBg.open,#evDetailBg.open,#walletOptBg.open,#walletAddBg.open,#catAddBg.open,#budAddBg.open,#confirmBg.open{
@@ -1273,7 +1271,7 @@ nav button.fab svg{transition:transform .38s var(--spring)}
   background:radial-gradient(circle,rgba(167,139,250,.28),transparent 70%);
 }
 .hero>*{position:relative;z-index:1}
-.hero .chip{border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.hero .chip{border:1px solid rgba(255,255,255,.14)}
 
 /* 10. Dark Mode Card Depth & Dynamic Sticky Header */
 @media (prefers-color-scheme:dark){
@@ -1303,14 +1301,13 @@ nav button.fab svg{transition:transform .38s var(--spring)}
 
 /* 11. Spring Toast & Reduced Motion */
 #toast{
-  background:rgba(20,24,42,.88);
-  -webkit-backdrop-filter:blur(14px) saturate(1.6);backdrop-filter:blur(14px) saturate(1.6);
+  background:rgba(20,24,42,.92);
   border:1px solid rgba(255,255,255,.12);
   box-shadow:0 10px 28px rgba(0,0,0,.28);
   transform:translateX(-50%) translateY(22px) scale(.92);
   transition:transform .34s var(--spring),opacity .22s;
 }
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{
@@ -1360,8 +1357,8 @@ nav button.fab svg{transition:transform .38s var(--spring)}
 }
 .wcard>*{position:relative;z-index:1}
 .wcard-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
-.wcard-ico{width:34px;height:34px;border-radius:11px;background:rgba(255,255,255,.2);
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.22);
+.wcard-ico{width:34px;height:34px;border-radius:11px;background:rgba(255,255,255,.22);
+  border:1px solid rgba(255,255,255,.24);
   display:grid;place-items:center;font-size:17px;overflow:hidden;flex:none}
 .wcard-name{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
 .wcard-chip{width:24px;height:17px;border-radius:5px;background:linear-gradient(135deg,rgba(255,255,255,.45),rgba(255,255,255,.15));border:1px solid rgba(255,255,255,.35);flex:none}
@@ -1410,14 +1407,13 @@ body.priv-pulse #lFreeCash,body.priv-pulse #portTot{
 /* #7 Success Pulse & AI Magic Shimmer */
 #savePulse{
   position:fixed;left:50%;top:46%;transform:translate(-50%,-50%) scale(.75);
-  z-index:75;pointer-events:none;opacity:0;
-  background:rgba(15,23,42,.88);color:#fff;border:1px solid rgba(255,255,255,.16);
-  -webkit-backdrop-filter:blur(16px) saturate(1.8);backdrop-filter:blur(16px) saturate(1.8);
+  z-index:75;pointer-events:none;opacity:0;visibility:hidden;
+  background:rgba(15,23,42,.92);color:#fff;border:1px solid rgba(255,255,255,.16);
   border-radius:24px;padding:16px 22px;display:flex;flex-direction:column;align-items:center;gap:8px;
   box-shadow:0 20px 48px rgba(0,0,0,.35);
-  transition:transform .34s var(--spring),opacity .22s;
+  transition:transform .34s var(--spring),opacity .22s,visibility 0s linear .34s;
 }
-#savePulse.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#savePulse.show{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);transition:transform .34s var(--spring),opacity .22s,visibility 0s}
 #savePulse .sp-ring{
   width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#10b981,#22c55e);
   display:grid;place-items:center;box-shadow:0 6px 18px rgba(16,185,129,.42);
@@ -1435,30 +1431,26 @@ body.priv-pulse #lFreeCash,body.priv-pulse #portTot{
 .ai-adv-btn{position:relative;overflow:hidden}
 @keyframes aiShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-/* #8 Tinted Icon Glow, Stagger Entrance & Live Swipe Pill */
+/* #8 Tinted Icon Glow, Stagger & Live Swipe Pill */
 .drow .ico.t-out{background:var(--red-soft);box-shadow:inset 0 0 0 1px rgba(225,29,72,.12)}
 .drow .ico.t-in{background:var(--green-soft);box-shadow:inset 0 0 0 1px rgba(22,163,74,.14)}
 .drow .ico.t-trf{background:var(--blue-soft);box-shadow:inset 0 0 0 1px rgba(2,132,199,.14)}
 
 @keyframes rowRise{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
-.drow,.cgrp-card{animation:rowRise .26s var(--ease-out) backwards}
-.drow:nth-child(2),.wcard:nth-child(2),.cgrp-card:nth-child(2){animation-delay:18ms}
-.drow:nth-child(3),.wcard:nth-child(3),.cgrp-card:nth-child(3){animation-delay:36ms}
-.drow:nth-child(4),.wcard:nth-child(4),.cgrp-card:nth-child(4){animation-delay:54ms}
-.drow:nth-child(5),.wcard:nth-child(5),.cgrp-card:nth-child(5){animation-delay:72ms}
-.drow:nth-child(6),.wcard:nth-child(6),.cgrp-card:nth-child(6){animation-delay:90ms}
-.drow:nth-child(7),.wcard:nth-child(7),.cgrp-card:nth-child(7){animation-delay:108ms}
-.drow:nth-child(n+8),.wcard:nth-child(n+8),.cgrp-card:nth-child(n+8){animation-delay:120ms}
+#recentTx .drow{animation:rowRise .26s var(--ease-out) backwards}
+#recentTx .drow:nth-child(2),.wcard:nth-child(2){animation-delay:20ms}
+#recentTx .drow:nth-child(3),.wcard:nth-child(3){animation-delay:40ms}
+.wcard:nth-child(4){animation-delay:60ms}
+.wcard:nth-child(5){animation-delay:80ms}
 
 #swipePill{
   position:fixed;top:calc(68px + var(--sat));left:50%;transform:translateX(-50%) scale(.88);
-  z-index:24;pointer-events:none;opacity:0;
-  background:rgba(20,24,42,.86);color:#fff;border:1px solid rgba(255,255,255,.14);
-  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  z-index:24;pointer-events:none;opacity:0;visibility:hidden;
+  background:rgba(20,24,42,.90);color:#fff;border:1px solid rgba(255,255,255,.14);
   padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;
-  box-shadow:0 8px 22px rgba(0,0,0,.22);transition:opacity .18s,transform .22s var(--spring);
+  box-shadow:0 8px 22px rgba(0,0,0,.22);transition:opacity .18s,transform .22s var(--spring),visibility 0s linear .22s;
 }
-#swipePill.show{opacity:1;transform:translateX(-50%) scale(1)}
+#swipePill.show{opacity:1;visibility:visible;transform:translateX(-50%) scale(1);transition:opacity .18s,transform .22s var(--spring),visibility 0s}
 </style>
 </head>
 <body>
@@ -1772,9 +1764,9 @@ body.priv-pulse #lFreeCash,body.priv-pulse #portTot{
 
     <div class="add-compact">
       <div class="seg">
-        <button id="tOut" class="on out" onclick="setType('Pengeluaran')">Pengeluaran</button>
-        <button id="tIn" class="on in" onclick="setType('Pemasukan')">Pemasukan</button>
-        <button id="tTrf" class="on trf" onclick="setType('Transfer')">Transfer</button>
+        <button type="button" id="tOut" class="on out" onclick="setType('Pengeluaran')">Pengeluaran</button>
+        <button type="button" id="tIn" onclick="setType('Pemasukan')">Pemasukan</button>
+        <button type="button" id="tTrf" onclick="setType('Transfer')">Transfer</button>
       </div>
         <div class="split-box" id="splitBox">
           <div class="split-hdr">
@@ -2183,7 +2175,7 @@ body.priv-pulse #lFreeCash,body.priv-pulse #portTot{
   <div class="cm-inner">
     <div class="cm-top">
       <div class="cm-bar">
-        <button class="cm-back" onclick="closeCatModal()">‹ Kembali</button>
+        <button type="button" class="cm-back" onclick="closeCatModal()">‹ Kembali</button>
         <div class="cm-title">Pilih kategori</div>
         <div style="display:flex;gap:6px;align-items:center">
           <button type="button" id="cmEditToggle" class="cm-manage-btn" onclick="toggleCmManage()">Atur</button>
@@ -2193,12 +2185,12 @@ body.priv-pulse #lFreeCash,body.priv-pulse #portTot{
       <div class="cm-search" id="cmSearchWrap">
         <span class="sico">🔍</span>
         <input id="cmSearch" placeholder="Cari kategori atau sub kategori…" oninput="onCmSearch()" autocomplete="off">
-        <button class="sclr" onclick="clearCmSearch()" aria-label="Hapus pencarian">✕</button>
+        <button type="button" class="sclr" onclick="clearCmSearch()" aria-label="Hapus pencarian">✕</button>
       </div>
       <div class="cm-seg" id="cmSeg">
-        <button data-t="Pengeluaran" onclick="setCmType('Pengeluaran')">Pengeluaran</button>
-        <button data-t="Pemasukan" onclick="setCmType('Pemasukan')">Pemasukan</button>
-        <button data-t="Transfer" onclick="setCmType('Transfer')">Transfer</button>
+        <button type="button" data-t="Pengeluaran" onclick="setCmType('Pengeluaran')">Pengeluaran</button>
+        <button type="button" data-t="Pemasukan" onclick="setCmType('Pemasukan')">Pemasukan</button>
+        <button type="button" data-t="Transfer" onclick="setCmType('Transfer')">Transfer</button>
       </div>
     </div>
     <div class="cm-body" id="cmBody"></div>
@@ -5329,6 +5321,7 @@ var cmMode = 'add';
 var cmType = 'Pengeluaran';
 var cmManageMode = false;
 function openCatModal(mode){
+  if(!S || !S.kategori) return;
   cmMode = mode || 'add';
   cmType = cmMode === 'edit' ? eType : type;
   cmManageMode = false;
@@ -5338,7 +5331,7 @@ function openCatModal(mode){
   $('cmSearchWrap').classList.remove('has');
   renderCatModal();
   $('catModal').classList.add('open');
-  if(typeof syncSegPill === 'function') setTimeout(function(){ syncSegPill($('cmSeg')); }, 25);
+  if(typeof syncSegPill === 'function') setTimeout(function(){ syncSegPill($('cmSeg')); }, 35);
 }
 function closeCatModal(){
   cmManageMode = false;
@@ -7617,15 +7610,16 @@ window.addEventListener('offline', function(){ renderOfflineBar(); });
 (function initMonthSwipe(){
   var sx = 0, sy = 0, active = false;
   var pill = function(){ return $('swipePill'); };
+  var reset = function(){ active = false; var p = pill(); if(p) p.classList.remove('show'); };
   document.addEventListener('touchstart', function(e){
     if(!e.touches || e.touches.length !== 1) return;
     var t = e.target;
     var tag = (t && t.tagName) || '';
     if(/INPUT|TEXTAREA|SELECT|BUTTON/.test(tag)) return;
     if(t && t.closest && t.closest('.wcards-strip,.habit-row,.fchips,.wchips,#rptSvg,#wkChartSvg,#trdSvg')) return;
-    if(document.querySelector('#edit.open,#pad.open,#evModal.open,#evDetailModal.open,#filterModal.open,#profModal.open,#catModal.open,#onbModal.open')) return;
+    if(document.querySelector('#edit.open,#pad.open,#evModal.open,#evDetailModal.open,#filterModal.open,#profModal.open,#catModal.open,#onbModal.open,#recModal.open,#budDetailModal.open,#walletOptModal.open,#walletAddModal.open,#catAddModal.open,#budAddModal.open')) return;
     var curView = document.querySelector('.view.on');
-    if(curView && curView.id === 'v-add') return;
+    if(curView && (curView.id === 'v-add' || curView.id === 'v-cats' || curView.id === 'v-lap')) return;
     sx = e.touches[0].clientX;
     sy = e.touches[0].clientY;
     active = true;
@@ -7644,6 +7638,7 @@ window.addEventListener('offline', function(){ renderOfflineBar(); });
       p.classList.remove('show');
     }
   }, { passive: true });
+  document.addEventListener('touchcancel', reset, { passive: true });
   document.addEventListener('touchend', function(e){
     var p = pill();
     if(p) p.classList.remove('show');
@@ -7882,14 +7877,24 @@ function deleteRecurringUi(id){
 /* ===== #2 PULL-TO-REFRESH ===== */
 (function initPullToRefresh(){
   var startY = 0, pulling = false, ready = false;
+  var blocked = function(){
+    if(document.querySelector('#edit.open,#pad.open,#evModal.open,#evDetailModal.open,#budDetailModal.open,#walletOptModal.open,#walletAddModal.open,#catAddModal.open,#budAddModal.open,#confirmSheet.open,#filterModal.open,#profModal.open,#catModal.open,#recModal.open,#onbModal.open')) return true;
+    var curView = document.querySelector('.view.on');
+    return !!(curView && (curView.id === 'v-add' || curView.id === 'v-cats' || curView.id === 'v-lap'));
+  };
+  var cancel = function(){
+    pulling = false; ready = false;
+    var bar = $('ptrBar');
+    if(bar) bar.classList.remove('show');
+  };
   document.addEventListener('touchstart', function(e){
-    if(window.scrollY > 4 || !e.touches || e.touches.length !== 1) return;
-    if(document.querySelector('#edit.open,#pad.open,#evModal.open,#evDetailModal.open,#budDetailModal.open,#walletOptModal.open,#filterModal.open,#profModal.open,#catModal.open,#recModal.open,#onbModal.open')) return;
+    if(window.scrollY > 4 || !e.touches || e.touches.length !== 1 || blocked()) return;
     startY = e.touches[0].clientY;
     pulling = true; ready = false;
   }, { passive: true });
   document.addEventListener('touchmove', function(e){
     if(!pulling || !e.touches || !e.touches.length) return;
+    if(blocked()){ cancel(); return; }
     var dy = e.touches[0].clientY - startY;
     var bar = $('ptrBar');
     if(!bar) return;
@@ -7902,15 +7907,12 @@ function deleteRecurringUi(id){
       bar.classList.remove('show');
     }
   }, { passive: true });
+  document.addEventListener('touchcancel', cancel, { passive: true });
   document.addEventListener('touchend', function(){
     if(!pulling) return;
-    pulling = false;
-    var bar = $('ptrBar');
-    if(bar) bar.classList.remove('show');
-    if(ready && S){
-      ready = false;
-      load(S.ym);
-    }
+    var shouldLoad = ready && !blocked();
+    cancel();
+    if(shouldLoad && S) load(S.ym);
   }, { passive: true });
 })();
 
