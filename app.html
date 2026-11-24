@@ -5010,6 +5010,7 @@ function renderDays(){
   $('fMeta').textContent = metaParts.join(' · ');
 
   if(listSort !== 'newest'){
+    var en = APP_LANG === 'en';
     var sorted = filtered.slice().sort(function(a, b){
       return listSort === 'highest' ? (b.amount - a.amount) : (a.amount - b.amount);
     });
@@ -5018,14 +5019,18 @@ function renderDays(){
       var cls = isTrf ? 'trf' : (isIn ? 'in' : 'out');
       var sign = isTrf ? (isWithdraw(t.sub) ? '⬅ ' : '➡ ') : (isIn ? '+' : '-');
       var title = esc(trCat(t.cat)) + (t.sub ? ' · ' + esc(trCat(t.sub)) : '');
-      var subText = esc(t.date) + ' · ' + esc(walletLbl(t)) + (t.note ? ' · ' + esc(t.note) : '');
+      var qd = t.date.split('-').map(Number);
+      var dStr = dayLabel(t.date) + ', ' + ('0'+qd[2]).slice(-2) + ' ' + BLN[qd[1]-1].slice(0,3) + (listAllMonths ? ' ' + qd[0] : '');
+      var subText = dStr + ' · ' + esc(walletLbl(t)) + (t.note ? ' · ' + esc(t.note) : '');
       var evTag = txEventBadgeHtml(t);
       return '<div class="drow" onclick="openEdit(\''+esc(t.id)+'\')">'+
         '<div class="ico">'+iconOf(t.cat, t.type, t.sub)+'</div>'+
         '<div class="mid"><b>'+title+'</b><small>'+subText+'</small>'+evTag+'</div>'+
         '<div class="amt '+cls+'">'+sign+mk(rp(t.amount))+'</div></div>';
     }).join('');
-    $('list').innerHTML = '<div class="dcard">'+rowsFlat+'</div>';
+    var sortTitle = listSort === 'highest' ? (en ? 'Highest Amount' : 'Nominal Terbesar') : (en ? 'Lowest Amount' : 'Nominal Terkecil');
+    var sortHead = '<div class="dhead"><div class="dnum" style="font-size:16px">↕</div><div class="dmid"><b>'+sortTitle+'</b><small>'+filtered.length+(en?' transactions':' transaksi')+'</small></div></div>';
+    $('list').innerHTML = '<div class="dcard">'+sortHead+rowsFlat+'</div>';
     return;
   }
 
