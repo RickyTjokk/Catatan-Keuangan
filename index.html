@@ -10,13 +10,13 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
-<meta http-equiv="refresh" content="0; url=app.html">
+<meta http-equiv="refresh" content="0; url=app.html?v=20261124b">
 <title>Catatan Keuangan</title>
 <style>
   html,body{background:#f3f4f9;margin:0}
   @media (prefers-color-scheme: dark){html,body{background:#0e1120}}
 </style>
-<script>location.replace('app.html');</script>
+<script>location.replace('app.html?v=20261124b' + (location.search ? '&' + location.search.slice(1) : '') + location.hash);</script>
 </head>
 <body></body>
 </html>

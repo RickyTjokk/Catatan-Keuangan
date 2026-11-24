@@ -351,7 +351,7 @@ button{border:0;background:none;cursor:pointer}
 /* welcome onboarding wizard (3 langkah - opsi B) */
 #onbBg{position:fixed;inset:0;background:rgba(15,18,35,.58);
   opacity:0;pointer-events:none;transition:opacity .25s;z-index:60}
-#onbBg.open{opacity:1;pointer-events:auto;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#onbBg.open{opacity:1;pointer-events:auto}
 #onbModal{position:fixed;left:50%;top:50%;width:calc(100% - 28px);max-width:440px;max-height:88vh;
   transform:translate(-50%,-46%) scale(.96);opacity:0;pointer-events:none;z-index:61;
   background:var(--card);border:1px solid var(--line);border-radius:26px;
@@ -788,41 +788,39 @@ nav button.fab.open svg{transform:rotate(45deg)}
 #edit{padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
 :root{--muted:#667085}
 
-/* ===== LIQUID GLASS ===== */
+/* ===== CRISP TRANSLUCENT SURFACES (iOS-SAFE) ===== */
 :root{
-  --glass:rgba(255,255,255,.55); --glass-strong:rgba(255,255,255,.80);
-  --glass-brd:rgba(255,255,255,.65);
-  --glass-hi:inset 0 1px 0 rgba(255,255,255,.85),inset 0 -1px 0 rgba(255,255,255,.25);
-  --glass-sh:0 8px 32px rgba(31,38,90,.16);
+  --glass:rgba(255,255,255,.94); --glass-strong:rgba(255,255,255,.98);
+  --glass-brd:rgba(226,232,240,.85);
+  --glass-hi:inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(15,23,42,.04);
+  --glass-sh:0 8px 30px rgba(31,38,90,.14);
 }
 @media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){--glass:rgba(30,36,64,.50);--glass-strong:rgba(24,29,51,.80);
-    --glass-brd:rgba(255,255,255,.14);
-    --glass-hi:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(255,255,255,.04);
-    --glass-sh:0 8px 32px rgba(0,0,0,.45)}
+  :root:not([data-theme="light"]){--glass:rgba(24,29,51,.94);--glass-strong:rgba(24,29,51,.98);
+    --glass-brd:rgba(255,255,255,.12);
+    --glass-hi:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -1px 0 rgba(0,0,0,.22);
+    --glass-sh:0 8px 30px rgba(0,0,0,.45)}
 }
-:root[data-theme="dark"]{--glass:rgba(30,36,64,.50);--glass-strong:rgba(24,29,51,.80);
-  --glass-brd:rgba(255,255,255,.14);
-  --glass-hi:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(255,255,255,.04);
-  --glass-sh:0 8px 32px rgba(0,0,0,.45)}
+:root[data-theme="dark"]{--glass:rgba(24,29,51,.94);--glass-strong:rgba(24,29,51,.98);
+  --glass-brd:rgba(255,255,255,.12);
+  --glass-hi:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -1px 0 rgba(0,0,0,.22);
+  --glass-sh:0 8px 30px rgba(0,0,0,.45)}
 
-/* latar berwarna supaya blur terlihat */
-body{background:transparent}
-body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+/* latar ringan non-fixed agar GPU iOS tetap stabil */
+body{background:var(--bg);position:relative}
+body::before{content:'';position:absolute;top:0;left:0;right:0;height:260px;z-index:0;pointer-events:none;
   background:
-    radial-gradient(420px 320px at 12% 8%,rgba(124,58,237,.28),transparent 70%),
-    radial-gradient(380px 300px at 92% 30%,rgba(2,132,199,.22),transparent 70%),
-    radial-gradient(460px 360px at 30% 95%,rgba(236,72,153,.20),transparent 70%)}
+    radial-gradient(360px 220px at 14% 0%,rgba(124,58,237,.14),transparent 70%),
+    radial-gradient(340px 200px at 88% 12%,rgba(2,132,199,.12),transparent 70%)}
+#app{position:relative;z-index:1}
 
 /* header edge-to-edge */
 .top{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px;
-  background:var(--glass);border-bottom:1px solid var(--glass-brd);
-  -webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6)}
+  background:var(--glass);border-bottom:1px solid var(--glass-brd)}
 
 /* nav melayang berbentuk pil (dengan micro-label ala Money Lover) */
 nav{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));max-width:456px;margin:0 auto;
   padding:6px 10px;border:1px solid var(--glass-brd);border-radius:32px;background:var(--glass);
-  -webkit-backdrop-filter:blur(22px) saturate(1.8);backdrop-filter:blur(22px) saturate(1.8);
   box-shadow:var(--glass-hi),var(--glass-sh)}
 nav button:not(.fab){flex-direction:column;gap:3px;width:auto;min-width:56px;height:48px;padding:4px 8px;border-radius:18px}
 nav button:not(.fab) svg{width:21px;height:21px}
@@ -830,20 +828,14 @@ nav button:not(.fab) svg{width:21px;height:21px}
 nav button.on:not(.fab){background:rgba(79,70,229,.14)}
 nav button.fab{margin-top:0;width:54px;height:54px;border:0}
 
-/* bottom sheet (backdrop-filter hanya saat terbuka agar GPU iOS tetap ringan) */
+/* bottom sheet tanpa backdrop-filter agar GPU WebKit iOS tidak crash/reload */
 #edit,#pad,#catAddModal,#budAddModal,#budDetailModal,#walletAddModal,#walletOptModal,#confirmSheet,#profModal,#filterModal{
   background:var(--glass-strong);border-top:1px solid var(--glass-brd);
   box-shadow:var(--glass-hi),0 -10px 40px rgba(0,0,0,.2)}
-#edit.open,#pad.open,#catAddModal.open,#budAddModal.open,#budDetailModal.open,#walletAddModal.open,#walletOptModal.open,#confirmSheet.open,#profModal.open,#filterModal.open,#recModal.open,#evModal.open,#evDetailModal.open{
-  -webkit-backdrop-filter:blur(24px) saturate(1.7);backdrop-filter:blur(24px) saturate(1.7)}
 
-/* fallback */
-@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  .top,nav,#edit,#pad,#catAddModal,#budAddModal,#budDetailModal,#walletAddModal,#walletOptModal,#confirmSheet,#profModal,#filterModal{background:var(--card)}
-}
 @media (prefers-reduced-transparency:reduce){
   .top,nav,#edit,#pad,#catAddModal,#budAddModal,#budDetailModal,#walletAddModal,#walletOptModal,#confirmSheet,#profModal,#filterModal{
-    background:var(--card);-webkit-backdrop-filter:none;backdrop-filter:none}
+    background:var(--card)}
 }
 
 /* bar Laporan & Kalender di Riwayat */
@@ -1127,7 +1119,7 @@ nav button.fab{margin-top:0;width:54px;height:54px;border:0}
 /* ===== FLUID & BOUNCY UI/UX UPGRADE (PAKET 1, 2, 3) ===== */
 :root{
   --spring:cubic-bezier(.34,1.56,.64,1);
-  --ease-out:cubic-bezier(.22,1.12,.36,1);
+  --ease-out:cubic-bezier(.22,1,.36,1);
   --sat:env(safe-area-inset-top, 0px);
   --sab:env(safe-area-inset-bottom, 0px);
 }
@@ -1198,35 +1190,33 @@ nav button.fab svg{transition:transform .38s var(--spring)}
 .cgrp-card.open .cgrp-rows{grid-template-rows:1fr;opacity:1;margin-top:10px;padding-top:6px;border-top:1px solid var(--line)}
 .port-chev,.cgrp-chev{transition:transform .3s var(--spring)}
 
-/* 6. Native Bottom Sheets, Bulletproof Modal Hiding, Grabber Handle & Bouncy Spring */
+/* 6. Native Bottom Sheets, Bulletproof Modal Hiding, Grabber Handle & Anti Click-Through */
+body.nav-shield nav,body.nav-shield nav *{pointer-events:none !important}
 #catModal{
-  transform:translate3d(0,105%,0);visibility:hidden;pointer-events:none;
-  transition:transform .3s var(--ease-out),visibility 0s linear .3s !important;
+  transform:translateY(105%);visibility:hidden;pointer-events:none;
+  transition:transform .28s var(--ease-out),visibility 0s linear .28s !important;
 }
 #catModal.open{
-  transform:translate3d(0,0,0);visibility:visible;pointer-events:auto;
-  transition:transform .3s var(--ease-out),visibility 0s !important;
+  transform:translateY(0);visibility:visible;pointer-events:auto;
+  transition:transform .28s var(--ease-out),visibility 0s !important;
 }
 #onbModal{visibility:hidden}
 #onbModal.open{visibility:visible}
 #edit,#pad,#catAddModal,#budAddModal,#budDetailModal,#walletAddModal,#walletOptModal,#confirmSheet,#profModal,#filterModal,#recModal,#evModal,#evDetailModal{
-  transform:translate3d(0,calc(100% + 48px),0);
+  transform:translateY(calc(100% + 48px));
   visibility:hidden;
   pointer-events:none;
-  transition:transform .34s var(--ease-out),visibility 0s linear .34s !important;
+  transition:transform .3s var(--ease-out),visibility 0s linear .3s !important;
 }
 #edit.open,#pad.open,#catAddModal.open,#budAddModal.open,#budDetailModal.open,#walletAddModal.open,#walletOptModal.open,#confirmSheet.open,#profModal.open,#filterModal.open,#recModal.open,#evModal.open,#evDetailModal.open{
-  transform:translate3d(0,0,0) !important;
+  transform:translateY(0) !important;
   visibility:visible;
   pointer-events:auto;
-  transition:transform .34s var(--ease-out),visibility 0s !important;
+  transition:transform .3s var(--ease-out),visibility 0s !important;
 }
 #recModal,#evModal,#evDetailModal{
   background:var(--glass-strong);border-top:1px solid var(--glass-brd);
   box-shadow:var(--glass-hi),0 -10px 40px rgba(0,0,0,.2);
-}
-#fabBg.on,#profBg.open,#editBg.open,#filterBg.open,#budDetailBg.open,#recBg.open,#evBg.open,#evDetailBg.open,#walletOptBg.open,#walletAddBg.open,#catAddBg.open,#budAddBg.open,#confirmBg.open{
-  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
 }
 .sheet-grab{
   width:38px;height:4.5px;border-radius:99px;background:var(--muted);opacity:.32;
@@ -1307,7 +1297,7 @@ nav button.fab svg{transition:transform .38s var(--spring)}
   transform:translateX(-50%) translateY(22px) scale(.92);
   transition:transform .34s var(--spring),opacity .22s;
 }
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{
@@ -1413,7 +1403,7 @@ body.priv-pulse #lFreeCash,body.priv-pulse #portTot{
   box-shadow:0 20px 48px rgba(0,0,0,.35);
   transition:transform .34s var(--spring),opacity .22s,visibility 0s linear .34s;
 }
-#savePulse.show{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);transition:transform .34s var(--spring),opacity .22s,visibility 0s}
+#savePulse.show{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1);transition:transform .34s var(--spring),opacity .22s,visibility 0s}
 #savePulse .sp-ring{
   width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#10b981,#22c55e);
   display:grid;place-items:center;box-shadow:0 6px 18px rgba(16,185,129,.42);
@@ -3453,6 +3443,7 @@ function load(ym){
     if($('skelOverlay')) $('skelOverlay').classList.remove('on');
     try { render(); } catch(e) { console.error(e); S = null; }
     $('loader').classList.add('off');
+    if(typeof maybeRestoreViewRecovery === 'function') maybeRestoreViewRecovery();
     setSyncing(true, 'Menyegarkan…');
   } else {
     if(!S) $('loader').classList.remove('off');
@@ -3467,6 +3458,7 @@ function load(ym){
       $('loader').classList.add('off');
       setSyncing(false);
       prefetchPrevMonth(d.ym);
+      if(typeof maybeRestoreViewRecovery === 'function') maybeRestoreViewRecovery();
       if(typeof maybeShowOnboarding === 'function') maybeShowOnboarding();
     })
     .catch(function(e){
@@ -3587,9 +3579,52 @@ var _curView = 'home';
 var _navOrder = { home: 0, wallet: 1, budget: 2, list: 3 };
 var _lastShiftDir = 0;
 
+function saveViewRecovery(v){
+  try {
+    if(v === 'add'){
+      sessionStorage.setItem('ck_view_recovery', JSON.stringify({
+        v: 'add',
+        type: type,
+        cat: pickedCat,
+        sub: pickedSub,
+        wallet: pickedWallet,
+        walletTo: pickedWalletTo,
+        ts: Date.now()
+      }));
+    } else {
+      sessionStorage.removeItem('ck_view_recovery');
+    }
+  } catch(e) {}
+}
+function maybeRestoreViewRecovery(){
+  if(window._viewRecoveredOnce || !S || !S.kategori) return;
+  window._viewRecoveredOnce = true;
+  try {
+    var raw = sessionStorage.getItem('ck_view_recovery');
+    if(!raw) return;
+    var st = JSON.parse(raw);
+    if(!st || st.v !== 'add' || (Date.now() - (st.ts || 0)) > 60000){
+      sessionStorage.removeItem('ck_view_recovery');
+      return;
+    }
+    if(_curView !== 'home') return;
+    if(st.type) type = st.type;
+    if(st.cat) pickedCat = st.cat;
+    if('sub' in st) pickedSub = st.sub;
+    if(st.wallet) pickedWallet = st.wallet;
+    if(st.walletTo) pickedWalletTo = st.walletTo;
+    if($('tOut')) $('tOut').className = type==='Pengeluaran' ? 'on out' : '';
+    if($('tIn')) $('tIn').className = type==='Pemasukan' ? 'on in' : '';
+    if($('tTrf')) $('tTrf').className = type==='Transfer' ? 'on trf' : '';
+    renderForm();
+    go('add');
+  } catch(e) {}
+}
+
 function go(v){
   if(!fabIsLocked()) closeFabMenu();
   if(v !== 'list' && typeof exitSelectMode === 'function' && selectMode) exitSelectMode();
+  saveViewRecovery(v);
   var prev = _curView;
   _curView = v;
   var dirCls = '';
@@ -5322,6 +5357,8 @@ var cmType = 'Pengeluaran';
 var cmManageMode = false;
 function openCatModal(mode){
   if(!S || !S.kategori) return;
+  clearTimeout(closeCatModal._shield);
+  document.body.classList.remove('nav-shield');
   cmMode = mode || 'add';
   cmType = cmMode === 'edit' ? eType : type;
   cmManageMode = false;
@@ -5335,6 +5372,11 @@ function openCatModal(mode){
 }
 function closeCatModal(){
   cmManageMode = false;
+  document.body.classList.add('nav-shield');
+  clearTimeout(closeCatModal._shield);
+  closeCatModal._shield = setTimeout(function(){
+    document.body.classList.remove('nav-shield');
+  }, 380);
   $('catModal').classList.remove('open');
 }
 function toggleCmManage(){
@@ -5504,6 +5546,7 @@ function selectCatItem(cat, sub){
     renderSplitBox();
     return;
   }
+  closeCatModal();
   if(cmMode === 'edit'){
     eType = cmType;
     eCat = cat;
@@ -5517,8 +5560,8 @@ function selectCatItem(cat, sub){
     $('tIn').className = type==='Pemasukan' ? 'on in' : '';
     $('tTrf').className = type==='Transfer' ? 'on trf' : '';
     renderForm();
+    if(typeof saveViewRecovery === 'function') saveViewRecovery('add');
   }
-  closeCatModal();
 }
 
 /* Modal Tambah Kategori / Sub-Kategori */
@@ -8207,6 +8250,7 @@ function renderOnboarding(){
 /* ===== FLUID & BOUNCY UI/UX ENHANCER (PAKET 1, 2, 3) ===== */
 function haptic(ms){
   try {
+    if(navigator && navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
     if(navigator && typeof navigator.vibrate === 'function') navigator.vibrate(ms || 8);
   } catch(e) {}
 }
@@ -8336,10 +8380,12 @@ function syncAllSegPills(){
 
     if(typeof MutationObserver !== 'undefined'){
       document.querySelectorAll('.seg, .period-seg, .view-seg, .bud-seg, .cm-seg').forEach(function(seg){
+        var rafId = 0;
         var mo = new MutationObserver(function(muts){
           for(var i = 0; i < muts.length; i++){
             if(muts[i].target && muts[i].target.tagName === 'BUTTON'){
-              syncSegPill(seg);
+              if(rafId) cancelAnimationFrame(rafId);
+              rafId = requestAnimationFrame(function(){ rafId = 0; syncSegPill(seg); });
               break;
             }
           }

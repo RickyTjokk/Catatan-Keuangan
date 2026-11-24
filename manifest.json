@@ -1,7 +1,7 @@
 {
   "name": "Catatan Keuangan",
   "short_name": "Keuangan",
-  "start_url": "./app.html",
+  "start_url": "./app.html?v=20261124b",
   "scope": "./",
   "display": "standalone",
   "background_color": "#4f46e5",
